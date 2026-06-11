@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>购车比价计算器</title>
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="购车比价">
+<meta name="theme-color" content="#0a0e1a">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a0e1a; --surface:#111827; --surface2:#1a2235; --surface3:#1e2d44;
+  --border:#2a3a55; --border-light:#3a4f72;
+  --accent:#00d4ff; --accent2:#00ff9d; --accent3:#ff6b35; --accent4:#ffd700;
+  --text:#e8eef8; --text-dim:#8899bb; --text-dimmer:#556688;
+  --danger:#ff4d6d; --success:#00e676; --warn:#ffab40;
+  --gift:#d946ef; --radius:12px; --radius-sm:8px;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans SC',sans-serif;font-weight:400;line-height:1.6;min-height:100vh;overflow-x:hidden}
+
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,255,.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+
+body::after{content:'';position:fixed;top:-20%;left:-10%;width:60%;height:60%;background:radial-gradient(ellipse,rgba(0,212,255,.06) 0%,transparent 70%);pointer-events:none;z-index:0}
+
+/* ===== PAGE SYSTEM ===== */
+.page{display:none;position:relative;z-index:1;max-width:960px;margin:0 auto;padding:24px 20px 80px;animation:fadeIn .35s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ===== TOP NAV BAR ===== */
+.topbar{position:sticky;top:0;z-index:100;background:rgba(10,14,26,.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;gap:12px}
+.topbar-brand{font-family:'Noto Serif SC',serif;font-size:14px;font-weight:600;color:var(--text-dim);flex:1}
+.tab-btns{display:flex;gap:4px}
+.tab-btn{background:none;border:1px solid transparent;border-radius:8px;color:var(--text-dimmer);cursor:pointer;font-family:'Noto Sans SC',sans-serif;font-size:12px;padding:6px 14px;transition:all .2s}
+.tab-btn:hover{color:var(--text-dim);border-color:var(--border)}
+.tab-btn.active{background:rgba(0,212,255,.12);border-color:var(--accent);color:var(--accent)}
+.tab-btn .badge{background:var(--danger);color:#fff;font-size:10px;border-radius:100px;padding:1px 5px;margin-left:4px;font-family:'JetBrains Mono',monospace}
+
+/* ===== HEADER ===== */
+.page-header{text-align:center;padding:32px 0 24px}
+.header-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);color:var(--accent);font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:6px 16px;border-radius:100px;margin-bottom:16px}
+.header-badge::before{content:'';width:6px;height:6px;background:var(--accent);border-radius:50%;animation:pulse-dot 2s ease-in-out infinite}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+h1{font-family:'Noto Serif SC',serif;font-size:clamp(24px,4vw,38px);font-weight:700;line-height:1.2;background:linear-gradient(135deg,#e8eef8 0%,#00d4ff 50%,#00ff9d 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px}
+.page-subtitle{color:var(--text-dim);font-size:14px}
+
+/* ===== SECTION CARDS ===== */
+.section-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:18px;position:relative;overflow:hidden;transition:border-color .3s}
+.section-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--section-accent,linear-gradient(90deg,var(--accent),var(--accent2)))}
+.section-card:hover{border-color:var(--border-light)}
+.section-title{display:flex;align-items:center;gap:10px;font-family:'Noto Serif SC',serif;font-size:15px;font-weight:600;color:var(--text);margin-bottom:20px}
+.section-title-spacer{flex:1}
+.section-icon{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+
+/* ===== FORM ===== */
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.form-group{display:flex;flex-direction:column;gap:7px}
+label{font-size:11px;font-weight:500;color:var(--text-dim);text-transform:uppercase;letter-spacing:.8px}
+label .required{color:var(--danger);margin-left:3px}
+label .hint{font-size:10px;color:var(--text-dimmer);text-transform:none;letter-spacing:0;font-weight:400;margin-left:4px}
+
+input[type="number"],input[type="date"],input[type="text"],select{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:'Noto Sans SC',sans-serif;font-size:14px;padding:10px 14px;transition:all .2s;width:100%;outline:none;-webkit-appearance:none;appearance:none}
+input:focus,select:focus{border-color:var(--accent);background:rgba(0,212,255,.05);box-shadow:0 0 0 3px rgba(0,212,255,.1)}
+input::placeholder{color:var(--text-dimmer)}
+.input-suffix{position:relative}
+.input-suffix input{padding-right:34px}
+.input-suffix .suffix-text{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--text-dimmer);font-size:12px;pointer-events:none}
+
+/* ===== RADIO ===== */
+.radio-group{display:flex;gap:8px;flex-wrap:wrap}
+.radio-option{position:relative}
+.radio-option input[type="radio"]{position:absolute;opacity:0;width:0;height:0}
+.radio-option label{display:flex;align-items:center;gap:5px;padding:8px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:100px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text-dim);text-transform:none;letter-spacing:0;transition:all .2s;white-space:nowrap}
+.radio-option input:checked+label{background:rgba(0,212,255,.12);border-color:var(--accent);color:var(--accent)}
+.radio-option label:hover{border-color:var(--border-light);color:var(--text)}
+
+/* ===== DYNAMIC ROWS ===== */
+.dyn-rows{display:flex;flex-direction:column;gap:7px}
+.dyn-row{display:flex;gap:8px;align-items:center;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;transition:border-color .2s}
+.dyn-row:focus-within{border-color:var(--border-light)}
+.dyn-row .row-name{flex:1.4;background:transparent;border:none;padding:3px 0;font-size:13px;color:var(--text);min-width:0;outline:none}
+.dyn-divider{width:1px;height:18px;background:var(--border);flex-shrink:0}
+.dyn-row .amt-wrap{position:relative;flex:1;min-width:80px}
+.dyn-row .amt-wrap input[type="number"]{background:transparent;border:none;padding:3px 26px 3px 0;font-size:13px;font-family:'JetBrains Mono',monospace;text-align:right;width:100%;outline:none}
+.dyn-row .amt-wrap .unit{position:absolute;right:0;top:50%;transform:translateY(-50%);font-size:11px;color:var(--text-dimmer);pointer-events:none}
+.btn-remove-row{background:none;border:none;color:var(--text-dimmer);cursor:pointer;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:17px;border-radius:4px;transition:all .2s;flex-shrink:0;line-height:1}
+.btn-remove-row:hover{color:var(--danger);background:rgba(255,77,109,.1)}
+
+/* Add inline button */
+.btn-add-inline{display:inline-flex;align-items:center;gap:4px;background:rgba(0,255,157,.08);border:1px solid rgba(0,255,157,.3);border-radius:100px;color:var(--accent2);cursor:pointer;font-family:'Noto Sans SC',sans-serif;font-size:11px;font-weight:500;padding:4px 12px;transition:all .2s;white-space:nowrap}
+.btn-add-inline:hover{background:rgba(0,255,157,.15);border-color:var(--accent2)}
+.btn-add-inline.expense{background:rgba(255,171,64,.08);border-color:rgba(255,171,64,.3);color:var(--warn)}
+.btn-add-inline.expense:hover{background:rgba(255,171,64,.15);border-color:var(--warn)}
+.btn-add-inline.gift{background:rgba(217,70,239,.08);border-color:rgba(217,70,239,.3);color:var(--gift)}
+.btn-add-inline.gift:hover{background:rgba(217,70,239,.15);border-color:var(--gift)}
+
+.row-total{display:flex;justify-content:space-between;align-items:center;padding:8px 12px 0;border-top:1px dashed var(--border);margin-top:5px}
+.row-total .total-label{font-size:11px;color:var(--text-dimmer)}
+.row-total .total-val{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700}
+.total-val.income{color:var(--accent2)}
+.total-val.expense-color{color:var(--warn)}
+.total-val.gift-color{color:var(--gift)}
+
+/* Two-col */
+.two-col-sections{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
+.two-col-sections .section-card{margin-bottom:0}
+@media(max-width:640px){.two-col-sections{grid-template-columns:1fr}}
+
+/* ===== CONDITIONAL ===== */
+.conditional{overflow:hidden;transition:max-height .4s cubic-bezier(.4,0,.2,1),opacity .3s;max-height:0;opacity:0}
+.conditional.visible{max-height:600px;opacity:1}
+.conditional-inner{padding-top:16px;display:flex;flex-direction:column;gap:16px}
+
+/* ===== ALERTS ===== */
+.alert{display:flex;gap:10px;padding:12px 14px;border-radius:var(--radius-sm);font-size:12px;line-height:1.5;margin-top:14px}
+.alert-icon{font-size:14px;flex-shrink:0}
+.alert-warn{background:rgba(255,171,64,.1);border:1px solid rgba(255,171,64,.3);color:var(--warn)}
+.alert-info{background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.2);color:var(--accent)}
+.alert-danger{background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.3);color:var(--danger)}
+.alert-success{background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.2);color:var(--success)}
+.alert-gift{background:rgba(217,70,239,.07);border:1px solid rgba(217,70,239,.25);color:#e879f9;margin-top:0}
+
+/* ===== BUTTONS ===== */
+.btn-primary{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#00d4ff,#00ff9d);border:none;border-radius:100px;color:#0a0e1a;cursor:pointer;font-family:'Noto Serif SC',serif;font-size:17px;font-weight:700;letter-spacing:2px;padding:16px 52px;transition:all .3s;position:relative;overflow:hidden}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 40px rgba(0,212,255,.4)}
+.btn-primary:active{transform:translateY(0)}
+
+.btn-sec{display:inline-flex;align-items:center;gap:7px;background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);border-radius:10px;color:var(--accent);cursor:pointer;font-family:'Noto Sans SC',sans-serif;font-size:13px;padding:9px 20px;transition:all .2s}
+.btn-sec:hover{background:rgba(0,212,255,.18);border-color:var(--accent)}
+
+.btn-save{display:inline-flex;align-items:center;gap:7px;background:rgba(0,255,157,.12);border:1px solid rgba(0,255,157,.4);border-radius:10px;color:var(--accent2);cursor:pointer;font-family:'Noto Sans SC',sans-serif;font-size:13px;padding:9px 20px;transition:all .2s}
+.btn-save:hover{background:rgba(0,255,157,.2);border-color:var(--accent2)}
+
+.btn-danger{display:inline-flex;align-items:center;gap:7px;background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.3);border-radius:10px;color:var(--danger);cursor:pointer;font-family:'Noto Sans SC',sans-serif;font-size:12px;padding:7px 14px;transition:all .2s}
+.btn-danger:hover{background:rgba(255,77,109,.18)}
+
+.btn-ghost{display:inline-flex;align-items:center;gap:6px;background:none;border:1px solid var(--border);border-radius:10px;color:var(--text-dim);cursor:pointer;font-family:'Noto Sans SC',sans-serif;font-size:13px;padding:9px 18px;transition:all .2s}
+.btn-ghost:hover{border-color:var(--border-light);color:var(--text)}
+
+.btn-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:24px}
+
+/* ===== PAGE 2: RESULT CARD ===== */
+.result-summary{background:linear-gradient(135deg,var(--surface2),var(--surface3));border:1px solid var(--border-light);border-radius:var(--radius);padding:28px;margin-bottom:20px;position:relative;overflow:hidden}
+.result-summary::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent3))}
+.summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:560px){.summary-grid{grid-template-columns:1fr 1fr}}
+.summary-item{text-align:center}
+.summary-item .s-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-dimmer);margin-bottom:6px}
+.summary-item .s-value{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700}
+.summary-item .s-sub{font-size:10px;color:var(--text-dimmer);margin-top:3px}
+.s-pay{color:var(--warn)}
+.s-final{color:var(--accent2)}
+.s-gift{color:var(--gift)}
+
+.savings-badge{text-align:center;margin-top:20px;padding-top:16px;border-top:1px dashed var(--border)}
+.savings-badge .label{font-size:11px;color:var(--text-dimmer);margin-bottom:5px}
+.savings-badge .amount{font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:700;color:var(--accent4)}
+.savings-badge .sub{font-size:11px;color:var(--text-dimmer);margin-top:3px}
+
+.result-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:18px}
+.result-header{display:flex;align-items:center;gap:8px;font-family:'Noto Serif SC',serif;font-size:16px;font-weight:600;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.result-rows{display:flex;flex-direction:column}
+.result-row{display:flex;justify-content:space-between;align-items:flex-start;padding:12px 0;border-bottom:1px solid rgba(42,58,85,.5);gap:14px}
+.result-row:last-child{border-bottom:none}
+.result-label{display:flex;align-items:flex-start;gap:7px;font-size:13px;color:var(--text-dim);max-width:55%;line-height:1.4}
+.result-label .dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:6px}
+.result-value{text-align:right}
+.result-value .amount{font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--text);display:block}
+.result-value .note{font-size:10px;color:var(--text-dimmer);margin-top:2px;display:block}
+.hl-warn .amount{color:var(--warn)!important}
+.hl-green .amount{color:var(--accent2)!important}
+.hl-blue .amount{color:var(--accent)!important}
+.hl-gift .amount{color:var(--gift)!important}
+.section-divider{border-top:2px solid var(--border-light);margin:6px 0}
+
+/* ===== MODAL ===== */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .3s}
+.modal-overlay.show{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border:1px solid var(--accent);border-radius:var(--radius);padding:28px;max-width:540px;width:100%;transform:translateY(20px);transition:transform .3s;box-shadow:0 0 60px rgba(0,212,255,.15);max-height:85vh;overflow-y:auto}
+.modal-overlay.show .modal{transform:translateY(0)}
+.modal h3{font-family:'Noto Serif SC',serif;font-size:17px;margin-bottom:14px;color:var(--accent)}
+.modal p{color:var(--text-dim);font-size:13px;line-height:1.7;margin-bottom:10px}
+.btn-close-modal{display:inline-flex;align-items:center;gap:6px;background:rgba(0,212,255,.15);border:1px solid var(--accent);border-radius:8px;color:var(--accent);cursor:pointer;font-family:'Noto Sans SC',sans-serif;font-size:13px;padding:9px 22px;margin-top:10px;transition:all .2s}
+.btn-close-modal:hover{background:rgba(0,212,255,.25)}
+
+/* Save record modal */
+.save-form .form-group{margin-bottom:14px}
+.save-form label{display:block;margin-bottom:6px;font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--text-dim)}
+
+/* ===== PAGE 4: RECORDS ===== */
+.records-empty{text-align:center;padding:60px 20px;color:var(--text-dimmer)}
+.records-empty .icon{font-size:48px;margin-bottom:16px}
+.records-empty p{font-size:14px;line-height:1.8}
+
+.records-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+
+.record-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;position:relative;overflow:hidden;transition:all .3s;cursor:pointer}
+.record-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.record-card:hover{border-color:var(--border-light);transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,.3)}
+
+.record-card .rc-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+.record-card .rc-dealership{font-family:'Noto Serif SC',serif;font-size:15px;font-weight:600;color:var(--text)}
+.record-card .rc-model{font-size:12px;color:var(--text-dim);margin-top:2px}
+.record-card .rc-date{font-size:11px;color:var(--text-dimmer);font-family:'JetBrains Mono',monospace;white-space:nowrap}
+
+.record-card .rc-prices{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.rc-price-item .label{font-size:10px;color:var(--text-dimmer);text-transform:uppercase;letter-spacing:.5px}
+.rc-price-item .val{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;margin-top:2px}
+.rc-price-item.pay .val{color:var(--warn)}
+.rc-price-item.final .val{color:var(--accent2)}
+.rc-price-item.gift .val{color:var(--gift)}
+.rc-price-item.net .val{color:var(--accent)}
+
+.record-card .rc-tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px}
+.rc-tag{font-size:10px;padding:2px 8px;border-radius:100px;border:1px solid;font-family:'JetBrains Mono',monospace}
+.rc-tag.nev{color:var(--accent2);border-color:rgba(0,255,157,.3);background:rgba(0,255,157,.08)}
+.rc-tag.fuel{color:var(--warn);border-color:rgba(255,171,64,.3);background:rgba(255,171,64,.08)}
+.rc-tag.trade{color:var(--accent);border-color:rgba(0,212,255,.3);background:rgba(0,212,255,.08)}
+
+.record-card .rc-actions{display:flex;gap:8px;justify-content:flex-end;padding-top:10px;border-top:1px solid var(--border)}
+
+/* Compare bar */
+.compare-bar{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.compare-bar .cb-label{font-size:12px;color:var(--text-dim);font-weight:500}
+.compare-badge{display:inline-flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border-light);border-radius:8px;padding:5px 10px;font-size:12px;color:var(--text)}
+.compare-badge .cb-remove{cursor:pointer;color:var(--text-dimmer);transition:color .2s}
+.compare-badge .cb-remove:hover{color:var(--danger)}
+
+/* Records header */
+.records-header{display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.records-count{font-size:12px;color:var(--text-dimmer);font-family:'JetBrains Mono',monospace}
+
+/* ===== VAT TOGGLE ===== */
+.vat-toggle{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 14px}
+.vat-toggle label{text-transform:none;letter-spacing:0;font-size:12px;color:var(--text-dim)}
+.vat-toggle input{width:auto;padding:3px 7px;font-size:13px}
+
+/* ===== SECTION COLORS ===== */
+.s1{--section-accent:linear-gradient(90deg,#00d4ff,#0096ff)}.s1 .section-icon{background:rgba(0,212,255,.15)}
+.s2{--section-accent:linear-gradient(90deg,#ff6b35,#ff9f43)}.s2 .section-icon{background:rgba(255,107,53,.15)}
+.s3{--section-accent:linear-gradient(90deg,#00ff9d,#00d4ff)}.s3 .section-icon{background:rgba(0,255,157,.15)}
+.s4{--section-accent:linear-gradient(90deg,#ffd700,#ff6b35)}.s4 .section-icon{background:rgba(255,215,0,.15)}
+.s-expense{--section-accent:linear-gradient(90deg,#ff6b35,#ffab40)}.s-expense .section-icon{background:rgba(255,107,53,.15)}
+.s-income{--section-accent:linear-gradient(90deg,#00ff9d,#00bfff)}.s-income .section-icon{background:rgba(0,255,157,.15)}
+.s-gift{--section-accent:linear-gradient(90deg,#d946ef,#a855f7)}.s-gift .section-icon{background:rgba(217,70,239,.15)}
+
+/* ===== POLICY ===== */
+.policy-section{margin-top:28px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px}
+.policy-section h3{font-family:'Noto Serif SC',serif;font-size:13px;color:var(--text-dim);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.policy-list{list-style:none;display:flex;flex-direction:column;gap:8px}
+.policy-list li{display:flex;align-items:flex-start;gap:8px;font-size:11px;color:var(--text-dimmer);line-height:1.6}
+.policy-list li a{color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(0,212,255,.3);transition:border-color .2s}
+.policy-list li a:hover{border-color:var(--accent)}
+.stacking-note{background:rgba(255,215,0,.06);border:1px solid rgba(255,215,0,.2);border-radius:var(--radius-sm);padding:14px;margin-top:16px;font-size:11px;color:var(--text-dim);line-height:1.8}
+.stacking-note strong{color:var(--accent4)}
+
+/* ===== PROCESS TEXT ===== */
+#processText{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim);line-height:2.2;white-space:pre-wrap}
+
+footer{text-align:center;margin-top:40px;padding-top:20px;border-top:1px solid var(--border);color:var(--text-dimmer);font-size:11px;line-height:1.8}
+footer a{color:var(--text-dim);text-decoration:none}
+footer a:hover{color:var(--accent)}
+
+@media(max-width:600px){
+  .form-grid{grid-template-columns:1fr}
+  .summary-grid{grid-template-columns:1fr 1fr}
+  .result-label{max-width:58%}
+  .btn-primary{padding:14px 36px;font-size:15px}
+  .tab-btn{font-size:11px;padding:5px 10px}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== TOP NAV ===== -->
+<div class="topbar">
+  <div class="topbar-brand">🚗 购车费用计算器 2026</div>
+  <div class="tab-btns">
+    <button class="tab-btn active" id="tab1" onclick="goPage(1)">① 录入</button>
+    <button class="tab-btn" id="tab2" onclick="goPage(2)">② 结果</button>
+    <button class="tab-btn" id="tab4" onclick="goPage(4)">③ 对比记录 <span class="badge" id="recordBadge" style="display:none">0</span></button>
+  </div>
+</div>
+
+<!-- ===== MODAL: 通用提示 ===== -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3 id="modalTitle">提示</h3>
+    <div id="modalBody"></div>
+    <button class="btn-close-modal" onclick="closeModal()">我知道了 ✓</button>
+  </div>
+</div>
+
+<!-- ===== MODAL: 计算过程 ===== -->
+<div class="modal-overlay" id="processModal">
+  <div class="modal" style="border-color:var(--text-dim);max-width:620px">
+    <h3 style="color:var(--text-dim)">🧮 计算过程明细</h3>
+    <div id="processText"></div>
+    <button class="btn-close-modal" style="border-color:var(--text-dim);color:var(--text-dim);background:rgba(136,153,187,.1)" onclick="closeProcessModal()">关闭</button>
+  </div>
+</div>
+
+<!-- ===== MODAL: 保存记录 ===== -->
+<div class="modal-overlay" id="saveModal">
+  <div class="modal" style="border-color:var(--accent2)">
+    <h3 style="color:var(--accent2)">💾 保存本次报价记录</h3>
+    <p style="margin-bottom:16px">填写此次看车的基本信息，保存后可在「对比记录」页面横向比较。</p>
+    <div class="save-form">
+      <div class="form-group">
+        <label>4S店 / 经销商名称 <span class="required">*</span></label>
+        <input type="text" id="saveDealership" placeholder="如：北京XX奔驰4S店">
+      </div>
+      <div class="form-group">
+        <label>车型名称</label>
+        <input type="text" id="saveModel" placeholder="如：比亚迪汉EV 2026款 Max版">
+      </div>
+      <div class="form-group">
+        <label>备注</label>
+        <input type="text" id="saveNote" placeholder="如：销售说还可以再优惠2000元">
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+      <button class="btn-save" onclick="confirmSave()">✓ 确认保存</button>
+      <button class="btn-ghost" onclick="closeSaveModal()">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: 记录详情 ===== -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal" style="border-color:var(--border-light);max-width:600px">
+    <h3 id="detailTitle" style="color:var(--text)"></h3>
+    <div id="detailBody"></div>
+    <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
+      <button class="btn-close-modal" style="border-color:var(--border-light);color:var(--text-dim);background:none" onclick="closeDetailModal()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL: 自定义确认框 ===== -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal" style="border-color:var(--danger);max-width:420px">
+    <h3 id="confirmTitle" style="color:var(--danger)">⚠️ 确认操作</h3>
+    <p id="confirmBody" style="color:var(--text-dim);font-size:14px;line-height:1.7;margin-bottom:16px"></p>
+    <div style="display:flex;gap:10px">
+      <button class="btn-danger" id="confirmOkBtn" style="padding:10px 24px;font-size:13px">确认删除</button>
+      <button class="btn-ghost" onclick="closeConfirmModal()">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================================
+     PAGE 1: 数据录入
+====================================================== -->
+<div class="page active" id="page1">
+  <div class="page-header">
+    <div class="header-badge">2026年政策 · 实时计算</div>
+    <h1>购车费用全维度计算器</h1>
+    <p class="page-subtitle">覆盖购置税减免 · 以旧换新国补 · 地方补贴 · 厂商优惠 · 赠品估值</p>
+  </div>
+
+  <!-- ① 基础价格 -->
+  <div class="section-card s1">
+    <div class="section-title"><div class="section-icon">🚗</div>基础价格信息</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>新车官方指导价（含税）<span class="required">*</span></label>
+        <div class="input-suffix">
+          <input type="number" id="guidePrice" min="0" step="0.01" placeholder="如：250000" oninput="recalcTotals()">
+          <span class="suffix-text">元</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>增值税率 <span class="hint">（默认13%）</span></label>
+        <div class="vat-toggle">
+          <label for="vatRate">增值税率：</label>
+          <div class="input-suffix" style="flex:1">
+            <input type="number" id="vatRate" value="13" min="0" max="20" step="0.1" style="width:100%;padding:8px 32px 8px 10px">
+            <span class="suffix-text">%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ② 厂商优惠 -->
+  <div class="section-card s2">
+    <div class="section-title">
+      <div class="section-icon">💰</div>厂商优惠
+      <div class="section-title-spacer"></div>
+      <button class="btn-add-inline" onclick="addMfrRow()">＋ 添加优惠项目</button>
+    </div>
+    <div id="manufacturerRows" class="dyn-rows">
+      <div class="dyn-row">
+        <input type="text" class="row-name" placeholder="如：厂商补贴">
+        <div class="dyn-divider"></div>
+        <div class="amt-wrap"><input type="number" class="mfr-amt" min="0" step="0.01" placeholder="5000" oninput="recalcTotals()"><span class="unit">元</span></div>
+        <button class="btn-remove-row" onclick="removeRow(this,'manufacturerRows')">×</button>
+      </div>
+    </div>
+    <div class="row-total"><span class="total-label">厂商补贴合计</span><span class="total-val income" id="mfrTotal">0.00 元</span></div>
+  </div>
+
+  <!-- ③ 车辆类型 -->
+  <div class="section-card s3">
+    <div class="section-title"><div class="section-icon">⚡</div>新购车辆类型与购置税</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>车辆类型<span class="required">*</span></label>
+        <div class="radio-group">
+          <div class="radio-option"><input type="radio" name="carType" id="typeEV" value="nev" onchange="onCarTypeChange()"><label for="typeEV">🔋 新能源</label></div>
+          <div class="radio-option"><input type="radio" name="carType" id="typeFuel" value="fuel" onchange="onCarTypeChange()"><label for="typeFuel">⛽ 燃油车</label></div>
+        </div>
+      </div>
+      <div class="form-group" id="nevSubGroup" style="display:none">
+        <label>新能源细分类别<span class="required">*</span></label>
+        <div class="radio-group">
+          <div class="radio-option"><input type="radio" name="nevType" id="nevBEV" value="bev"><label for="nevBEV">🔌 纯电动（BEV）</label></div>
+          <div class="radio-option"><input type="radio" name="nevType" id="nevPHEV" value="phev"><label for="nevPHEV">🔄 插混/增程（PHEV/EREV）</label></div>
+          <div class="radio-option"><input type="radio" name="nevType" id="nevFCEV" value="fcev"><label for="nevFCEV">💧 燃料电池（FCEV）</label></div>
+        </div>
+      </div>
+      <div class="form-group" id="fuelSubGroup" style="display:none">
+        <label>发动机排量<span class="required">*</span></label>
+        <div class="radio-group">
+          <div class="radio-option"><input type="radio" name="displacement" id="disp20" value="le2"><label for="disp20">≤ 2.0升</label></div>
+          <div class="radio-option"><input type="radio" name="displacement" id="dispOver" value="gt2"><label for="dispOver">> 2.0升</label></div>
+        </div>
+      </div>
+    </div>
+    <div id="nevAlert" class="alert alert-info" style="display:none">
+      <span class="alert-icon">ℹ️</span>
+      <div>请确认车辆在《减免车辆购置税的新能源汽车车型目录》内。2026-2027年插混/增程车型通常需满足<strong>纯电续航≥100km</strong>等技术要求（以工信部官方目录为准）。</div>
+    </div>
+  </div>
+
+  <!-- ④ 以旧换新 -->
+  <div class="section-card s4">
+    <div class="section-title"><div class="section-icon">🔄</div>以旧换新补贴</div>
+    <div class="form-group" style="margin-bottom:16px">
+      <label>是否参与以旧换新<span class="required">*</span></label>
+      <div class="radio-group">
+        <div class="radio-option"><input type="radio" name="tradeIn" id="tradeNo" value="none" onchange="onTradeInChange()" checked><label for="tradeNo">❌ 不参与</label></div>
+        <div class="radio-option"><input type="radio" name="tradeIn" id="tradeScrap" value="scrap" onchange="onTradeInChange()"><label for="tradeScrap">🏚 报废更新</label></div>
+        <div class="radio-option"><input type="radio" name="tradeIn" id="tradeSwap" value="swap" onchange="onTradeInChange()"><label for="tradeSwap">🔁 置换更新</label></div>
+      </div>
+    </div>
+    <div class="conditional" id="scrapFields">
+      <div class="conditional-inner">
+        <div class="form-group">
+          <label>旧车类型<span class="required">*</span></label>
+          <div class="radio-group">
+            <div class="radio-option"><input type="radio" name="oldCarType" id="oldGas" value="gas" onchange="validateOldCar()"><label for="oldGas">⛽ 汽油车</label></div>
+            <div class="radio-option"><input type="radio" name="oldCarType" id="oldDiesel" value="diesel" onchange="validateOldCar()"><label for="oldDiesel">🛢 柴油车</label></div>
+            <div class="radio-option"><input type="radio" name="oldCarType" id="oldNev" value="nev" onchange="validateOldCar()"><label for="oldNev">🔋 新能源车</label></div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>旧车注册日期<span class="required">*</span> <span class="hint">（用于验证国补资格）</span></label>
+          <input type="date" id="oldCarDate" onchange="validateOldCar()" max="2025-01-08">
+        </div>
+        <div id="scrapDateAlert" class="alert" style="display:none"></div>
+      </div>
+    </div>
+    <div class="conditional" id="swapFields">
+      <div class="conditional-inner">
+        <div class="alert alert-info"><span class="alert-icon">ℹ️</span><div>置换更新需将旧车通过<strong>正规二手车市场转让</strong>，保留二手车交易凭证备用。</div></div>
+      </div>
+    </div>
+    <div class="conditional" id="tradeInCommon">
+      <div class="conditional-inner">
+        <div class="form-group">
+          <label>旧车是否在本人名下满1年<span class="required">*</span></label>
+          <div class="radio-group">
+            <div class="radio-option"><input type="radio" name="owned1Year" id="owned1Yes" value="yes"><label for="owned1Yes">✅ 是（2025.1.8前已登记）</label></div>
+            <div class="radio-option"><input type="radio" name="owned1Year" id="owned1No" value="no"><label for="owned1No">❌ 否</label></div>
+          </div>
+        </div>
+        <div class="alert alert-warn"><span class="alert-icon">⚠️</span><div>旧车须在<strong>2025年1月8日前</strong>登记在申请人名下满1年，否则无法享受国补。</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⑤⑥ 其他费用 & 其他补贴 -->
+  <div class="two-col-sections">
+    <div class="section-card s-expense">
+      <div class="section-title">
+        <div class="section-icon">💸</div>其他费用
+        <div class="section-title-spacer"></div>
+        <button class="btn-add-inline expense" onclick="addExpenseRow()">＋ 添加费用</button>
+      </div>
+      <div id="expenseRows" class="dyn-rows">
+        <div class="dyn-row"><input type="text" class="row-name" value="保险费" placeholder="费用名称"><div class="dyn-divider"></div><div class="amt-wrap"><input type="number" class="exp-amt" min="0" step="0.01" placeholder="6000" oninput="recalcTotals()"><span class="unit">元</span></div><button class="btn-remove-row" onclick="removeRow(this,'expenseRows')">×</button></div>
+        <div class="dyn-row"><input type="text" class="row-name" value="上牌费" placeholder="费用名称"><div class="dyn-divider"></div><div class="amt-wrap"><input type="number" class="exp-amt" min="0" step="0.01" placeholder="500" oninput="recalcTotals()"><span class="unit">元</span></div><button class="btn-remove-row" onclick="removeRow(this,'expenseRows')">×</button></div>
+      </div>
+      <div class="row-total"><span class="total-label">其他费用合计</span><span class="total-val expense-color" id="expenseTotal">0.00 元</span></div>
+      <div class="alert alert-warn" style="margin-top:10px;padding:9px 12px;font-size:11px"><span class="alert-icon" style="font-size:12px">💸</span><div>由您<strong>支付给4S店</strong>，提车时缴纳</div></div>
+    </div>
+    <div class="section-card s-income">
+      <div class="section-title">
+        <div class="section-icon">🎁</div>其他补贴
+        <div class="section-title-spacer"></div>
+        <button class="btn-add-inline" onclick="addSubsidyRow()">＋ 添加补贴</button>
+      </div>
+      <div id="subsidyRows" class="dyn-rows">
+        <div class="dyn-row"><input type="text" class="row-name" value="市级补贴" placeholder="补贴名称"><div class="dyn-divider"></div><div class="amt-wrap"><input type="number" class="sub-amt" min="0" step="0.01" placeholder="3000" oninput="recalcTotals()"><span class="unit">元</span></div><button class="btn-remove-row" onclick="removeRow(this,'subsidyRows')">×</button></div>
+      </div>
+      <div class="row-total"><span class="total-label">其他补贴合计</span><span class="total-val income" id="subsidyTotal">0.00 元</span></div>
+      <div class="alert alert-info" style="margin-top:10px;padding:9px 12px;font-size:11px"><span class="alert-icon" style="font-size:12px">🎁</span><div>通常<strong>提车后返还</strong>，需先垫付</div></div>
+    </div>
+  </div>
+
+  <!-- ⑦ 赠品 -->
+  <div class="section-card s-gift">
+    <div class="section-title">
+      <div class="section-icon">🎀</div>4S店赠品
+      <div class="section-title-spacer"></div>
+      <button class="btn-add-inline gift" onclick="addGiftRow()">＋ 添加赠品</button>
+    </div>
+    <div id="giftRows" class="dyn-rows">
+      <div class="dyn-row"><input type="text" class="row-name" value="免费保养" placeholder="赠品名称"><div class="dyn-divider"></div><div class="amt-wrap"><input type="number" class="gift-amt" min="0" step="0.01" placeholder="2000" oninput="recalcTotals()"><span class="unit">元</span></div><button class="btn-remove-row" onclick="removeRow(this,'giftRows')">×</button></div>
+    </div>
+    <div class="row-total"><span class="total-label">赠品总价值</span><span class="total-val gift-color" id="giftTotal">0.00 元</span></div>
+    <div class="alert alert-gift" style="margin-top:10px;padding:9px 12px;font-size:11px"><span class="alert-icon" style="font-size:12px">🎀</span><div>赠品价值<strong>不计入实际支出</strong>，用于横向对比综合性价比</div></div>
+  </div>
+
+  <!-- 计算按钮 -->
+  <div style="text-align:center;margin:32px 0">
+    <button class="btn-primary" onclick="calculate()">⚡ 立即计算</button>
+  </div>
+
+  <div class="policy-section">
+    <h3>📜 政策依据</h3>
+    <ul class="policy-list">
+      <li><span>①</span><div><strong>购置税：</strong>《财政部 税务总局 工业和信息化部关于延续和优化新能源汽车车辆购置税减免政策的公告》（2023年第10号）</div></li>
+      <li><span>②</span><div><strong>以旧换新：</strong>《国家发改委 财政部关于2026年实施消费品以旧换新政策的通知》（发改环资〔2025〕1745号）</div></li>
+      <li><span>③</span><div>官方参考：<a href="https://www.mof.gov.cn" target="_blank">财政部</a> · <a href="https://www.mii.gov.cn" target="_blank">工信部</a> · <a href="https://www.mofcom.gov.cn" target="_blank">商务部</a> · <a href="https://www.ndrc.gov.cn" target="_blank">国家发改委</a></div></li>
+    </ul>
+    <div class="stacking-note"><strong>📌 补贴叠加：</strong>国补可与地方补贴、厂商补贴叠加；报废与置换补贴二选一；新能源可同享购置税减半+国补+地方补贴+厂商补贴。补贴通常提车后返还，需先行垫付。</div>
+  </div>
+  <footer><p>本计算器仅供参考，以政府官方公告及当地主管部门认定为准。政策有效期：2026.1.1–2027.12.31（购置税）；以旧换新补贴以年度官方通知和地方执行细则为准。</p></footer>
+</div>
+
+<!-- ======================================================
+     PAGE 2: 计算结果
+====================================================== -->
+<div class="page" id="page2">
+  <div class="page-header">
+    <div class="header-badge">计算结果</div>
+    <h1 id="p2Title">费用明细</h1>
+    <p class="page-subtitle" id="p2Subtitle">基于您填写的数据计算</p>
+  </div>
+
+  <!-- 三格摘要 -->
+  <div class="result-summary">
+    <div class="summary-grid">
+      <div class="summary-item"><div class="s-label">提车时需垫付</div><div class="s-value s-pay" id="sumPay">—</div><div class="s-sub">含购置税+其他费用</div></div>
+      <div class="summary-item"><div class="s-label">实际总支出</div><div class="s-value s-final" id="sumFinal">—</div><div class="s-sub">扣除所有补贴后</div></div>
+      <div class="summary-item"><div class="s-label">赠品总价值</div><div class="s-value s-gift" id="sumGift">—</div><div class="s-sub">不计入支出</div></div>
+    </div>
+    <div class="savings-badge">
+      <div class="label">通过各项优惠共节省</div>
+      <div class="amount" id="sumSavings">—</div>
+      <div class="sub" id="sumSavingsSub"></div>
+    </div>
+  </div>
+
+  <!-- 明细 -->
+  <div class="result-card">
+    <div class="result-header"><span>📊</span> 详细费用明细</div>
+    <div class="result-rows">
+      <div class="result-row hl-blue">
+        <div class="result-label"><div class="dot" style="background:var(--accent)"></div><div><strong>开票价格</strong><br><small style="color:var(--text-dimmer)">指导价 − 厂商补贴</small></div></div>
+        <div class="result-value"><span class="amount" id="rInvoice">—</span></div>
+      </div>
+      <div class="result-row">
+        <div class="result-label"><div class="dot" style="background:var(--text-dimmer)"></div><div>不含税价<br><small style="color:var(--text-dimmer)">开票价格 ÷ (1+增值税率)</small></div></div>
+        <div class="result-value"><span class="amount" id="rExTax" style="color:var(--text-dim)">—</span></div>
+      </div>
+      <div class="result-row hl-warn">
+        <div class="result-label"><div class="dot" style="background:var(--warn)"></div><div><strong>购置税</strong></div></div>
+        <div class="result-value"><span class="amount" id="rTax">—</span><span class="note" id="rTaxNote"></span></div>
+      </div>
+      <div class="result-row hl-warn">
+        <div class="result-label"><div class="dot" style="background:var(--warn)"></div><div><strong>其他费用合计</strong><br><small id="rExpDetail" style="color:var(--text-dimmer)"></small></div></div>
+        <div class="result-value"><span class="amount" id="rExpense">—</span></div>
+      </div>
+      <div class="section-divider"></div>
+      <div class="result-row hl-warn">
+        <div class="result-label"><div class="dot" style="background:var(--warn)"></div><div><strong>提车时需支付</strong><br><small style="color:var(--text-dimmer)">开票价+购置税+其他费用</small></div></div>
+        <div class="result-value"><span class="amount" id="rPayNow">—</span></div>
+      </div>
+      <div class="result-row hl-green">
+        <div class="result-label"><div class="dot" style="background:var(--accent2)"></div><div><strong>以旧换新国补</strong></div></div>
+        <div class="result-value"><span class="amount" id="rNational">—</span><span class="note" id="rNationalNote"></span></div>
+      </div>
+      <div class="result-row hl-green">
+        <div class="result-label"><div class="dot" style="background:var(--accent2)"></div><div><strong>其他补贴合计</strong><br><small id="rSubDetail" style="color:var(--text-dimmer)"></small></div></div>
+        <div class="result-value"><span class="amount" id="rSubsidy">—</span></div>
+      </div>
+      <div class="section-divider"></div>
+      <div class="result-row hl-green">
+        <div class="result-label"><div class="dot" style="background:var(--accent2)"></div><div><strong>实际总支出</strong><br><small style="color:var(--text-dimmer)">提车垫付 − 国补 − 其他补贴</small></div></div>
+        <div class="result-value"><span class="amount" id="rFinal">—</span></div>
+      </div>
+      <div id="rGiftRow" class="result-row" style="display:none;border-top:1px dashed var(--border);margin-top:4px">
+        <div class="result-label"><div class="dot" style="background:var(--gift)"></div><div><strong style="color:var(--gift)">4S店赠品总价值</strong><br><small style="color:var(--text-dimmer)">不计入支出，仅供参比</small><div id="rGiftDetail" style="font-size:10px;color:var(--text-dimmer);margin-top:3px;line-height:1.7"></div></div></div>
+        <div class="result-value"><span class="amount hl-gift" id="rGift" style="color:var(--gift)">—</span><span class="note">不计入支出</span></div>
+      </div>
+      <div id="rNetRow" class="result-row" style="display:none">
+        <div class="result-label"><div class="dot" style="background:var(--gift)"></div><div><strong style="color:var(--gift)">综合等效支出</strong><br><small style="color:var(--text-dimmer)">实际支出 − 赠品价值（横向对比用）</small></div></div>
+        <div class="result-value"><span class="amount" id="rNet" style="color:var(--gift)">—</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="resultAlerts"></div>
+
+  <!-- 操作按钮行 -->
+  <div class="btn-row">
+    <button class="btn-ghost" onclick="goPage(1)">← 返回修改</button>
+    <button class="btn-sec" onclick="openProcessModal()">🧮 查看计算过程</button>
+    <button class="btn-save" onclick="openSaveModal()">💾 保存报价记录</button>
+  </div>
+
+  <footer style="margin-top:32px"><p>本计算器仅供参考，以政府官方公告及当地主管部门认定为准。</p></footer>
+</div>
+
+<!-- ======================================================
+     PAGE 4: 对比记录
+====================================================== -->
+<div class="page" id="page4">
+  <div class="page-header">
+    <div class="header-badge">横向对比</div>
+    <h1>报价对比记录</h1>
+    <p class="page-subtitle">保存多家4S店报价，一键对比性价比</p>
+  </div>
+
+  <div class="records-header">
+    <div class="records-count" id="recordsCount">共 0 条记录</div>
+    <div style="flex:1"></div>
+    <button class="btn-ghost" onclick="goPage(1)" style="font-size:12px">← 返回录入</button>
+    <button class="btn-danger" id="clearAllBtn" onclick="clearAllRecords()" style="display:none">🗑 清空全部</button>
+  </div>
+
+  <div id="recordsEmpty" class="records-empty">
+    <div class="icon">📋</div>
+    <p>暂无保存记录<br>计算完成后点击「保存报价记录」<br>即可在此处对比多家4S店</p>
+  </div>
+
+  <div id="recordsGrid" class="records-grid"></div>
+
+  <footer style="margin-top:40px"><p>记录保存在本地浏览器，清除浏览器数据会丢失。建议定期导出或截图备份。</p></footer>
+</div>
+
+<script>
+/* ==========================================================
+   STATE
+========================================================== */
+let lastCalcResult = null; // 最近一次计算结果，用于保存
+
+/* ==========================================================
+   页面切换
+========================================================== */
+function goPage(n) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page' + n).classList.add('active');
+  document.getElementById('tab' + (n === 2 ? 2 : n === 4 ? 4 : 1)).classList.add('active');
+  window.scrollTo(0, 0);
+  if (n === 4) renderRecords();
+}
+
+/* ==========================================================
+   格式化（无千分位逗号）
+========================================================== */
+function fmt(n) { return n.toFixed(2); }
+
+function escapeHTML(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[ch]));
+}
+
+/* ==========================================================
+   合计
+========================================================== */
+function sumClass(cls) {
+  return [...document.querySelectorAll('.' + cls)].reduce((s, el) => s + (parseFloat(el.value) || 0), 0);
+}
+
+function recalcTotals() {
+  document.getElementById('mfrTotal').textContent     = fmt(sumClass('mfr-amt')) + ' 元';
+  document.getElementById('expenseTotal').textContent = fmt(sumClass('exp-amt')) + ' 元';
+  document.getElementById('subsidyTotal').textContent = fmt(sumClass('sub-amt')) + ' 元';
+  document.getElementById('giftTotal').textContent    = fmt(sumClass('gift-amt')) + ' 元';
+}
+
+/* ==========================================================
+   动态行
+========================================================== */
+function makeRow(nameVal, amtCls, placeholder, containerId) {
+  const d = document.createElement('div');
+  d.className = 'dyn-row';
+  d.innerHTML = `<input type="text" class="row-name" value="${nameVal}" placeholder="名称"><div class="dyn-divider"></div><div class="amt-wrap"><input type="number" class="${amtCls}" min="0" step="0.01" placeholder="${placeholder}" oninput="recalcTotals()"><span class="unit">元</span></div><button class="btn-remove-row" onclick="removeRow(this,'${containerId}')">×</button>`;
+  return d;
+}
+
+function addMfrRow()     { document.getElementById('manufacturerRows').appendChild(makeRow('','mfr-amt','0','manufacturerRows')); }
+function addExpenseRow() { document.getElementById('expenseRows').appendChild(makeRow('','exp-amt','0','expenseRows')); }
+function addSubsidyRow() { document.getElementById('subsidyRows').appendChild(makeRow('','sub-amt','0','subsidyRows')); }
+function addGiftRow()    { document.getElementById('giftRows').appendChild(makeRow('','gift-amt','0','giftRows')); }
+
+function removeRow(btn, id) {
+  const c = document.getElementById(id);
+  if (c.querySelectorAll('.dyn-row').length <= 1) { showModal('提示','<p>至少保留一行。</p>'); return; }
+  btn.closest('.dyn-row').remove();
+  recalcTotals();
+}
+
+/* ==========================================================
+   联动
+========================================================== */
+function onCarTypeChange() {
+  const v = document.querySelector('input[name="carType"]:checked')?.value;
+  document.getElementById('nevSubGroup').style.display = v === 'nev' ? 'block' : 'none';
+  document.getElementById('fuelSubGroup').style.display = v === 'fuel' ? 'block' : 'none';
+  document.getElementById('nevAlert').style.display = v === 'nev' ? 'flex' : 'none';
+}
+
+function onTradeInChange() {
+  const v = document.querySelector('input[name="tradeIn"]:checked')?.value;
+  document.getElementById('scrapFields').classList.toggle('visible', v === 'scrap');
+  document.getElementById('swapFields').classList.toggle('visible', v === 'swap');
+  document.getElementById('tradeInCommon').classList.toggle('visible', v === 'scrap' || v === 'swap');
+  if (v === 'scrap') validateOldCar();
+}
+
+function validateOldCar() {
+  const t = document.querySelector('input[name="oldCarType"]:checked')?.value;
+  const dv = document.getElementById('oldCarDate').value;
+  const el = document.getElementById('scrapDateAlert');
+  if (!t || !dv) { el.style.display='none'; return; }
+  const d = new Date(dv);
+  const L = { gas: new Date('2013-06-30'), diesel: new Date('2015-06-30'), nev: new Date('2019-12-31') };
+  const N = { gas:'汽油车', diesel:'柴油车', nev:'新能源车' };
+  const ok = d <= L[t];
+  el.className = 'alert alert-' + (ok ? 'success' : 'danger');
+  el.style.display = 'flex';
+  el.innerHTML = ok
+    ? `<span class="alert-icon">✅</span><div>旧车注册时间符合国补要求（${N[t]}需 ≤ ${L[t].toLocaleDateString('zh-CN')}）。</div>`
+    : `<span class="alert-icon">❌</span><div>旧车注册时间<strong>不符合</strong>国补要求！${N[t]}要求 ≤ ${L[t].toLocaleDateString('zh-CN')}，您填写的为 ${d.toLocaleDateString('zh-CN')}。</div>`;
+}
+
+/* ==========================================================
+   收集明细行
+========================================================== */
+function collectDetails(containerId, amtCls) {
+  const items = [];
+  document.querySelectorAll(`#${containerId} .dyn-row`).forEach(row => {
+    const name = row.querySelector('.row-name')?.value?.trim() || '项目';
+    const amt = parseFloat(row.querySelector('.'+amtCls)?.value) || 0;
+    if (amt > 0) items.push({ name, amt });
+  });
+  return items;
+}
+
+/* ==========================================================
+   核心计算
+========================================================== */
+function calculate() {
+  const guidePrice   = parseFloat(document.getElementById('guidePrice').value) || 0;
+  const vatRate      = parseFloat(document.getElementById('vatRate').value) || 13;
+  const mfrSubsidy   = sumClass('mfr-amt');
+  const extraExpense = sumClass('exp-amt');
+  const otherSubsidy = sumClass('sub-amt');
+  const giftValue    = sumClass('gift-amt');
+
+  const carType      = document.querySelector('input[name="carType"]:checked')?.value;
+  const nevType      = document.querySelector('input[name="nevType"]:checked')?.value;
+  const displacement = document.querySelector('input[name="displacement"]:checked')?.value;
+  const tradeIn      = document.querySelector('input[name="tradeIn"]:checked')?.value || 'none';
+  const oldCarType   = document.querySelector('input[name="oldCarType"]:checked')?.value;
+  const oldCarDate   = document.getElementById('oldCarDate').value;
+  const owned1Year   = document.querySelector('input[name="owned1Year"]:checked')?.value;
+
+  if (!guidePrice)                         { showModal('⚠️','<p>请输入新车官方指导价。</p>'); return; }
+  if (!carType)                            { showModal('⚠️','<p>请选择车辆类型。</p>'); return; }
+  if (carType==='nev' && !nevType)         { showModal('⚠️','<p>请选择新能源细分类别。</p>'); return; }
+  if (carType==='fuel' && !displacement)   { showModal('⚠️','<p>请选择燃油车发动机排量。</p>'); return; }
+  if ((tradeIn==='scrap'||tradeIn==='swap') && !owned1Year) { showModal('⚠️','<p>请确认旧车是否在本人名下满1年。</p>'); return; }
+
+  const invoicePrice = guidePrice - mfrSubsidy;
+  if (invoicePrice <= 0) { showModal('⚠️','<p>开票价格不能为零或负数，请检查输入。</p>'); return; }
+
+  const vatMult    = 1 + vatRate / 100;
+  const exTaxPrice = invoicePrice / vatMult;
+
+  // 购置税
+  let tax, taxNote, taxCap = null;
+  if (carType === 'nev') {
+    taxCap = 15000;
+    const reduction = Math.min(exTaxPrice * 0.05, taxCap);
+    tax = exTaxPrice * 0.10 - reduction;
+    taxNote = reduction >= taxCap
+      ? '新能源减半，减免已达上限15000元'
+      : '新能源减半（5%），减免 ' + fmt(reduction) + ' 元';
+  } else {
+    tax = exTaxPrice * 0.10;
+    taxNote = '燃油车全额（10%）';
+  }
+
+  // 以旧换新国补
+  let nationalSubsidy = 0, nationalNote = '';
+  let nationalAlerts = [];
+
+  if (tradeIn !== 'none') {
+    let eligible = true;
+    if (owned1Year === 'no') {
+      eligible = false;
+      nationalAlerts.push({ type:'danger', msg:'旧车未在本人名下满1年，不满足国补条件。' });
+    }
+    if (tradeIn === 'scrap') {
+      if (!oldCarType || !oldCarDate) {
+        eligible = false;
+        nationalAlerts.push({ type:'warn', msg:'报废更新需填写旧车类型和注册时间。' });
+      } else {
+        const d = new Date(oldCarDate);
+        const L = { gas:new Date('2013-06-30'), diesel:new Date('2015-06-30'), nev:new Date('2019-12-31') };
+        const N = { gas:'汽油车', diesel:'柴油车', nev:'新能源车' };
+        if (d > L[oldCarType]) {
+          eligible = false;
+          nationalAlerts.push({ type:'danger', msg:`旧车注册时间不符合！${N[oldCarType]}要求 ≤ ${L[oldCarType].toLocaleDateString('zh-CN')}` });
+        }
+      }
+      if (eligible) {
+        if (carType === 'nev') {
+          nationalSubsidy = Math.min(Math.ceil(invoicePrice*0.12), 20000);
+          nationalNote = `报废+新能源：开票价×12%=${fmt(invoicePrice*0.12)}元` + (invoicePrice*0.12>20000 ? '，封顶20000元' : '');
+        } else if (carType==='fuel' && displacement==='le2') {
+          nationalSubsidy = Math.min(Math.ceil(invoicePrice*0.10), 15000);
+          nationalNote = `报废+燃油(≤2L)：开票价×10%=${fmt(invoicePrice*0.10)}元` + (invoicePrice*0.10>15000 ? '，封顶15000元' : '');
+        } else {
+          nationalNote = '2.0L以上燃油车不享受国补';
+          nationalAlerts.push({ type:'warn', msg:'2.0L以上燃油车不享受以旧换新国补。' });
+        }
+      }
+    } else if (tradeIn==='swap' && eligible) {
+      if (carType === 'nev') {
+        nationalSubsidy = Math.min(Math.ceil(invoicePrice*0.08), 15000);
+        nationalNote = `置换+新能源：开票价×8%=${fmt(invoicePrice*0.08)}元` + (invoicePrice*0.08>15000 ? '，封顶15000元' : '');
+      } else if (carType==='fuel' && displacement==='le2') {
+        nationalSubsidy = Math.min(Math.ceil(invoicePrice*0.06), 13000);
+        nationalNote = `置换+燃油(≤2L)：开票价×6%=${fmt(invoicePrice*0.06)}元` + (invoicePrice*0.06>13000 ? '，封顶13000元' : '');
+      } else {
+        nationalNote = '2.0L以上燃油车不享受国补';
+        nationalAlerts.push({ type:'warn', msg:'2.0L以上燃油车不享受以旧换新国补。' });
+      }
+    }
+  } else {
+    nationalNote = '未参与以旧换新';
+  }
+
+  const payNow      = invoicePrice + tax + extraExpense;
+  const finalCost   = payNow - (nationalSubsidy + otherSubsidy);
+  const taxSaving   = taxCap !== null ? (exTaxPrice*0.10 - tax) : 0;
+  const totalSavings = mfrSubsidy + taxSaving + nationalSubsidy + otherSubsidy;
+
+  const expDetails  = collectDetails('expenseRows','exp-amt');
+  const subDetails  = collectDetails('subsidyRows','sub-amt');
+  const giftDetails = collectDetails('giftRows','gift-amt');
+  const mfrDetails  = collectDetails('manufacturerRows','mfr-amt');
+
+  // 计算过程文本
+  let process = '';
+  process += `─── 基础计算 ───\n`;
+  process += `指导价格          ${fmt(guidePrice)} 元\n`;
+  mfrDetails.forEach(d => { process += `厂商优惠       -  ${d.name} ${fmt(d.amt)} 元\n`; });
+  process += `开票价格          ${fmt(invoicePrice)} 元\n\n`;
+  process += `增值税率          ${vatRate}%\n`;
+  process += `不含税价格        ${fmt(invoicePrice)} ÷ ${vatMult.toFixed(2)} = ${fmt(exTaxPrice)} 元\n\n`;
+  process += `─── 购置税计算 ───\n`;
+  if (carType === 'nev') {
+    const _red = Math.min(exTaxPrice*0.05, 15000);
+    process += `原始税额（10%）   ${fmt(exTaxPrice)} × 10% = ${fmt(exTaxPrice*0.10)} 元\n`;
+    process += `减免额（×5%,封顶1.5万）- ${fmt(_red)} 元\n`;
+    if (_red >= 15000) process += `减免已达上限      15000.00 元\n`;
+  } else {
+    process += `燃油车全额        ${fmt(exTaxPrice)} × 10% = ${fmt(exTaxPrice*0.10)} 元\n`;
+  }
+  process += `实缴购置税        ${fmt(tax)} 元\n\n`;
+  if (tradeIn !== 'none') {
+    process += `─── 以旧换新国补 ───\n`;
+    if (nationalSubsidy > 0) {
+      if (tradeIn==='scrap' && carType==='nev')  process += `报废+新能源    ${fmt(invoicePrice)} × 12% = ${fmt(invoicePrice*0.12)} 元\n向上取整封顶   ${fmt(nationalSubsidy)} 元\n`;
+      else if (tradeIn==='scrap' && carType==='fuel') process += `报废+燃油(≤2L) ${fmt(invoicePrice)} × 10% = ${fmt(invoicePrice*0.10)} 元\n向上取整封顶   ${fmt(nationalSubsidy)} 元\n`;
+      else if (tradeIn==='swap'  && carType==='nev')  process += `置换+新能源    ${fmt(invoicePrice)} × 8% = ${fmt(invoicePrice*0.08)} 元\n向上取整封顶   ${fmt(nationalSubsidy)} 元\n`;
+      else if (tradeIn==='swap'  && carType==='fuel') process += `置换+燃油(≤2L) ${fmt(invoicePrice)} × 6% = ${fmt(invoicePrice*0.06)} 元\n向上取整封顶   ${fmt(nationalSubsidy)} 元\n`;
+    } else { process += `国补：不符合条件或无补贴\n`; }
+    process += `\n`;
+  }
+  process += `─── 费用汇总 ───\n`;
+  process += `开票价格          ${fmt(invoicePrice)} 元\n`;
+  process += `购置税         +  ${fmt(tax)} 元\n`;
+  expDetails.forEach(d => { process += `${d.name.padEnd(10)}+  ${fmt(d.amt)} 元\n`; });
+  process += `                 ────────────\n`;
+  process += `提车时支付        ${fmt(payNow)} 元\n\n`;
+  process += `以旧换新国补   -  ${fmt(nationalSubsidy)} 元\n`;
+  subDetails.forEach(d => { process += `${d.name.padEnd(10)}-  ${fmt(d.amt)} 元\n`; });
+  process += `                 ────────────\n`;
+  process += `实际总支出        ${fmt(finalCost)} 元\n`;
+  if (giftValue > 0) {
+    process += `\n─── 赠品 ───\n`;
+    giftDetails.forEach(d => { process += `${d.name.padEnd(10)}   ${fmt(d.amt)} 元\n`; });
+    process += `赠品总价值        ${fmt(giftValue)} 元（不计入支出）\n`;
+    process += `综合等效支出      ${fmt(finalCost - giftValue)} 元\n`;
+  }
+
+  // 渲染 page2
+  document.getElementById('rInvoice').textContent      = fmt(invoicePrice) + ' 元';
+  document.getElementById('rExTax').textContent        = fmt(exTaxPrice) + ' 元';
+  document.getElementById('rTax').textContent          = fmt(tax) + ' 元';
+  document.getElementById('rTaxNote').textContent      = taxNote;
+  document.getElementById('rExpense').textContent      = fmt(extraExpense) + ' 元';
+  document.getElementById('rExpDetail').textContent    = expDetails.map(d=>d.name+' '+fmt(d.amt)+'元').join(' · ') || '暂无明细';
+  document.getElementById('rNational').textContent     = fmt(nationalSubsidy) + ' 元';
+  document.getElementById('rNationalNote').textContent = nationalNote;
+  document.getElementById('rSubsidy').textContent      = fmt(otherSubsidy) + ' 元';
+  document.getElementById('rSubDetail').textContent    = subDetails.map(d=>d.name+' '+fmt(d.amt)+'元').join(' · ') || '暂无明细';
+  document.getElementById('rPayNow').textContent       = fmt(payNow) + ' 元';
+  document.getElementById('rFinal').textContent        = fmt(finalCost) + ' 元';
+  document.getElementById('sumPay').textContent        = fmt(payNow) + ' 元';
+  document.getElementById('sumFinal').textContent      = fmt(finalCost) + ' 元';
+  document.getElementById('sumGift').textContent       = giftValue > 0 ? fmt(giftValue) + ' 元' : '—';
+  document.getElementById('sumSavings').textContent    = fmt(totalSavings) + ' 元';
+
+  let savParts = [];
+  if (mfrSubsidy > 0)       savParts.push('厂商补贴 ' + fmt(mfrSubsidy) + '元');
+  if (taxSaving > 0)        savParts.push('购置税优惠 ' + fmt(taxSaving) + '元');
+  if (nationalSubsidy > 0)  savParts.push('国补 ' + fmt(nationalSubsidy) + '元');
+  if (otherSubsidy > 0)     savParts.push('其他补贴 ' + fmt(otherSubsidy) + '元');
+  document.getElementById('sumSavingsSub').textContent = savParts.length ? savParts.join(' + ') : '暂无优惠';
+
+  // 赠品行
+  if (giftValue > 0) {
+    document.getElementById('rGift').textContent = fmt(giftValue) + ' 元';
+    document.getElementById('rGiftDetail').innerHTML = giftDetails.map(d => `· ${escapeHTML(d.name)} ${fmt(d.amt)}元`).join('<br>');
+    document.getElementById('rNet').textContent = fmt(finalCost - giftValue) + ' 元';
+    document.getElementById('rGiftRow').style.display = 'flex';
+    document.getElementById('rNetRow').style.display = 'flex';
+  } else {
+    document.getElementById('rGiftRow').style.display = 'none';
+    document.getElementById('rNetRow').style.display = 'none';
+  }
+
+  // 警告
+  const alertsContainer = document.getElementById('resultAlerts');
+  alertsContainer.innerHTML = '';
+  if (!nationalAlerts.length && tradeIn !== 'none' && nationalSubsidy > 0)
+    nationalAlerts.push({ type:'success', msg:`满足以旧换新国补条件，可享受 ${fmt(nationalSubsidy)} 元补贴（提车后申请返还）。` });
+  if (tradeIn === 'none')
+    nationalAlerts.push({ type:'info', msg:'未选择以旧换新，如有符合条件的旧车，可考虑报废或置换方式获取额外补贴。' });
+  const icons = { danger:'❌', warn:'⚠️', success:'✅', info:'ℹ️' };
+  nationalAlerts.forEach(a => {
+    const div = document.createElement('div');
+    div.className = `alert alert-${a.type}`;
+    div.style.marginBottom = '10px';
+    div.innerHTML = `<span class="alert-icon">${icons[a.type]}</span><div>${a.msg}</div>`;
+    alertsContainer.appendChild(div);
+  });
+
+  // 更新 page2 标题
+  const carTypeLabel = carType === 'nev' ? (nevType === 'bev' ? '纯电动' : nevType === 'phev' ? '插混/增程' : '燃料电池') : (displacement === 'le2' ? '燃油车≤2L' : '燃油车>2L');
+  document.getElementById('p2Title').textContent = `费用明细`;
+  document.getElementById('p2Subtitle').textContent = `指导价 ${fmt(guidePrice)}元 · ${carTypeLabel} · ${tradeIn === 'none' ? '不换购' : tradeIn === 'scrap' ? '报废更新' : '置换更新'}`;
+
+  // 保存到 lastCalcResult
+  lastCalcResult = {
+    guidePrice, vatRate, mfrSubsidy, extraExpense, otherSubsidy, giftValue,
+    invoicePrice, exTaxPrice, tax, taxNote, nationalSubsidy, nationalNote,
+    payNow, finalCost, totalSavings, taxSaving,
+    carType, nevType, displacement, tradeIn,
+    expDetails, subDetails, giftDetails, mfrDetails,
+    processText: process,
+    calcTime: new Date().toISOString()
+  };
+
+  document.getElementById('processText').textContent = process;
+  goPage(2);
+}
+
+/* ==========================================================
+   计算过程弹窗
+========================================================== */
+function openProcessModal() {
+  document.getElementById('processModal').classList.add('show');
+}
+function closeProcessModal() {
+  document.getElementById('processModal').classList.remove('show');
+}
+
+/* ==========================================================
+   保存记录
+========================================================== */
+function openSaveModal() {
+  if (!lastCalcResult) { showModal('提示','<p>请先完成计算。</p>'); return; }
+  document.getElementById('saveDealership').value = '';
+  document.getElementById('saveModel').value = '';
+  document.getElementById('saveNote').value = '';
+  document.getElementById('saveModal').classList.add('show');
+}
+function closeSaveModal() {
+  document.getElementById('saveModal').classList.remove('show');
+}
+
+function confirmSave() {
+  const dealership = document.getElementById('saveDealership').value.trim();
+  if (!dealership) { alert('请填写4S店名称'); return; }
+  const model = document.getElementById('saveModel').value.trim();
+  const note  = document.getElementById('saveNote').value.trim();
+
+  const records = getRecords();
+  const record = {
+    id: Date.now(),
+    dealership,
+    model,
+    note,
+    savedAt: new Date().toLocaleString('zh-CN'),
+    ...lastCalcResult
+  };
+  records.push(record);
+  saveRecords(records);
+  closeSaveModal();
+  updateBadge();
+  showModal('✅ 保存成功', `<p>已保存「<strong>${escapeHTML(dealership)}</strong>」的报价记录。</p><p style="margin-top:8px">前往「③ 对比记录」查看所有记录。</p>`);
+}
+
+/* ==========================================================
+   localStorage 记录
+========================================================== */
+const STORAGE_KEY = 'car_calc_records_2026';
+
+function getRecords() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; }
+}
+
+function saveRecords(records) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+}
+
+function deleteRecord(id) {
+  showConfirm('确认删除', '确定要删除这条记录吗？此操作不可恢复。', function() {
+    const records = getRecords().filter(r => r.id !== id);
+    saveRecords(records);
+    updateBadge();
+    renderRecords();
+  });
+}
+
+function clearAllRecords() {
+  showConfirm('清空全部', '确定清空全部记录？此操作不可恢复。', function() {
+    saveRecords([]);
+    updateBadge();
+    renderRecords();
+  });
+}
+
+function showConfirm(title, msg, onOk) {
+  document.getElementById('confirmTitle').textContent = '⚠️ ' + title;
+  document.getElementById('confirmBody').textContent = msg;
+  const btn = document.getElementById('confirmOkBtn');
+  btn.onclick = function() {
+    closeConfirmModal();
+    onOk();
+  };
+  document.getElementById('confirmModal').classList.add('show');
+}
+
+function closeConfirmModal() {
+  document.getElementById('confirmModal').classList.remove('show');
+}
+
+function updateBadge() {
+  const n = getRecords().length;
+  const badge = document.getElementById('recordBadge');
+  badge.textContent = n;
+  badge.style.display = n > 0 ? 'inline' : 'none';
+}
+
+/* ==========================================================
+   渲染记录页
+========================================================== */
+function renderRecords() {
+  const records = getRecords();
+  const grid = document.getElementById('recordsGrid');
+  const empty = document.getElementById('recordsEmpty');
+  const count = document.getElementById('recordsCount');
+  const clearBtn = document.getElementById('clearAllBtn');
+
+  count.textContent = `共 ${records.length} 条记录`;
+  clearBtn.style.display = records.length > 0 ? 'flex' : 'none';
+
+  if (records.length === 0) {
+    empty.style.display = 'block';
+    grid.innerHTML = '';
+    return;
+  }
+
+  empty.style.display = 'none';
+
+  // 找出最低实际总支出和最低综合等效支出
+  const minFinal = Math.min(...records.map(r => r.finalCost));
+  const minNet   = Math.min(...records.map(r => r.giftValue > 0 ? r.finalCost - r.giftValue : r.finalCost));
+
+  grid.innerHTML = records.slice().reverse().map(r => {
+    const carLabel = r.carType === 'nev'
+      ? (r.nevType === 'bev' ? '🔋纯电' : r.nevType === 'phev' ? '🔄插混/增程' : '💧燃料电池')
+      : (r.displacement === 'le2' ? '⛽燃油≤2L' : '⛽燃油>2L');
+    const tradeLabel = r.tradeIn === 'none' ? '' : r.tradeIn === 'scrap' ? '报废更新' : '置换更新';
+    const isBestFinal = r.finalCost === minFinal;
+    const netVal = r.giftValue > 0 ? r.finalCost - r.giftValue : r.finalCost;
+    const isBestNet = netVal === minNet && records.length > 1;
+    const safeDealership = escapeHTML(r.dealership || '未填写经销商');
+    const safeModel = escapeHTML(r.model || '未填写车型');
+    const safeSavedDate = escapeHTML((r.savedAt || '').split(' ')[0]);
+    const safeNote = escapeHTML(r.note || '');
+
+    return `
+      <div class="record-card" data-id="${r.id}" style="${isBestFinal ? 'border-color:var(--accent2);box-shadow:0 0 20px rgba(0,255,157,.12)' : ''}">
+        ${isBestFinal ? '<div style="position:absolute;top:12px;right:12px;background:rgba(0,255,157,.15);border:1px solid rgba(0,255,157,.4);color:var(--accent2);font-size:10px;padding:2px 8px;border-radius:100px;font-family:JetBrains Mono,monospace">最优报价</div>' : ''}
+        <div class="rc-header">
+          <div><div class="rc-dealership">${safeDealership}</div><div class="rc-model">${safeModel}</div></div>
+          <div class="rc-date">${safeSavedDate}</div>
+        </div>
+        <div class="rc-tags">
+          <span class="rc-tag ${r.carType === 'nev' ? 'nev' : 'fuel'}">${carLabel}</span>
+          ${tradeLabel ? `<span class="rc-tag trade">${tradeLabel}</span>` : ''}
+          ${r.nationalSubsidy > 0 ? `<span class="rc-tag trade">国补${fmt(r.nationalSubsidy)}元</span>` : ''}
+        </div>
+        <div class="rc-prices">
+          <div class="rc-price-item"><div class="label">指导价</div><div class="val" style="color:var(--text-dim);font-size:13px">${fmt(r.guidePrice)}</div></div>
+          <div class="rc-price-item"><div class="label">开票价</div><div class="val" style="color:var(--text-dim);font-size:13px">${fmt(r.invoicePrice)}</div></div>
+          <div class="rc-price-item pay"><div class="label">提车垫付</div><div class="val">${fmt(r.payNow)}</div></div>
+          <div class="rc-price-item final"><div class="label">实际支出</div><div class="val">${fmt(r.finalCost)}</div></div>
+          ${r.giftValue > 0 ? `<div class="rc-price-item gift"><div class="label">赠品价值</div><div class="val">${fmt(r.giftValue)}</div></div>` : ''}
+          ${r.giftValue > 0 ? `<div class="rc-price-item net"><div class="label">等效支出 ${isBestNet && records.length>1 ? '🏆' : ''}</div><div class="val">${fmt(netVal)}</div></div>` : ''}
+        </div>
+        ${safeNote ? `<div style="font-size:11px;color:var(--text-dimmer);background:var(--surface2);border-radius:6px;padding:6px 10px;margin-bottom:10px">💬 ${safeNote}</div>` : ''}
+        <div class="rc-actions">
+          <button class="btn-sec rc-detail-btn" data-id="${r.id}" style="font-size:11px;padding:6px 12px">详情</button>
+          <button class="btn-danger rc-delete-btn" data-id="${r.id}" style="font-size:11px;padding:6px 12px">删除</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // 用事件委托绑定，避免冒泡问题
+  grid.onclick = function(e) {
+    // 删除按钮
+    const delBtn = e.target.closest('.rc-delete-btn');
+    if (delBtn) {
+      e.stopPropagation();
+      deleteRecord(Number(delBtn.dataset.id));
+      return;
+    }
+    // 详情按钮
+    const detailBtn = e.target.closest('.rc-detail-btn');
+    if (detailBtn) {
+      e.stopPropagation();
+      showDetail(Number(detailBtn.dataset.id));
+      return;
+    }
+    // 点击卡片其他区域 → 显示详情
+    const card = e.target.closest('.record-card');
+    if (card) {
+      showDetail(Number(card.dataset.id));
+    }
+  };
+}
+
+/* ==========================================================
+   记录详情弹窗
+========================================================== */
+function showDetail(id) {
+  const r = getRecords().find(rec => rec.id === id);
+  if (!r) return;
+  document.getElementById('detailTitle').textContent = `📋 ${r.dealership}${r.model ? ' · ' + r.model : ''}`;
+
+  const rows = [
+    ['指导价', fmt(r.guidePrice) + ' 元'],
+    ['厂商补贴合计', fmt(r.mfrSubsidy) + ' 元'],
+    ['开票价格', fmt(r.invoicePrice) + ' 元'],
+    ['不含税价', fmt(r.exTaxPrice) + ' 元'],
+    ['购置税', fmt(r.tax) + ' 元（' + r.taxNote + '）'],
+    ['其他费用', fmt(r.extraExpense) + ' 元' + (r.expDetails.length ? '（' + r.expDetails.map(d=>d.name).join('、') + '）' : '')],
+    ['---', ''],
+    ['提车时需支付', fmt(r.payNow) + ' 元'],
+    ['以旧换新国补', fmt(r.nationalSubsidy) + ' 元'],
+    ['其他补贴', fmt(r.otherSubsidy) + ' 元'],
+    ['---', ''],
+    ['实际总支出', fmt(r.finalCost) + ' 元'],
+  ];
+  if (r.giftValue > 0) {
+    rows.push(['4S店赠品价值', fmt(r.giftValue) + ' 元（' + r.giftDetails.map(d=>d.name).join('、') + '）']);
+    rows.push(['综合等效支出', fmt(r.finalCost - r.giftValue) + ' 元']);
+  }
+  if (r.note) rows.push(['备注', r.note]);
+  rows.push(['记录时间', r.savedAt]);
+
+  document.getElementById('detailBody').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:0">
+      ${rows.map(([k, v]) => k === '---'
+        ? '<div style="border-top:1px solid var(--border);margin:8px 0"></div>'
+        : `<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(42,58,85,.3);gap:12px">
+             <span style="font-size:12px;color:var(--text-dimmer);min-width:100px">${escapeHTML(k)}</span>
+             <span style="font-size:13px;color:var(--text);text-align:right;font-family:${k.includes('价') || k.includes('税') || k.includes('补') || k.includes('支') ? 'JetBrains Mono,monospace' : 'inherit'}">${escapeHTML(v)}</span>
+           </div>`
+      ).join('')}
+    </div>
+    <details style="margin-top:14px">
+      <summary style="font-size:12px;color:var(--text-dimmer);cursor:pointer;padding:6px 0">🧮 查看完整计算过程</summary>
+      <pre style="font-family:JetBrains Mono,monospace;font-size:11px;color:var(--text-dim);line-height:2;margin-top:8px;white-space:pre-wrap">${escapeHTML(r.processText)}</pre>
+    </details>
+  `;
+  document.getElementById('detailModal').classList.add('show');
+}
+
+function closeDetailModal() {
+  document.getElementById('detailModal').classList.remove('show');
+}
+
+/* ==========================================================
+   通用 Modal
+========================================================== */
+function showModal(title, body) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').innerHTML = body;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+function closeModal() { document.getElementById('modalOverlay').classList.remove('show'); }
+
+document.getElementById('modalOverlay').addEventListener('click', function(e) { if(e.target===this) closeModal(); });
+document.getElementById('processModal').addEventListener('click', function(e) { if(e.target===this) closeProcessModal(); });
+document.getElementById('saveModal').addEventListener('click', function(e) { if(e.target===this) closeSaveModal(); });
+document.getElementById('detailModal').addEventListener('click', function(e) { if(e.target===this) closeDetailModal(); });
+document.getElementById('confirmModal').addEventListener('click', function(e) { if(e.target===this) closeConfirmModal(); });
+
+/* ==========================================================
+   初始化
+========================================================== */
+updateBadge();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('./sw.js')
+      .then(function(reg) { console.log('SW registered:', reg.scope); })
+      .catch(function(err) { console.log('SW registration failed:', err); });
+  });
+}
+</script>
+</body>
+</html>

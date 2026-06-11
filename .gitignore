@@ -1,0 +1,18 @@
+.DS_Store
+Thumbs.db
+
+# Local editor / OS files
+.idea/
+.vscode/
+*.log
+
+# Temporary automation artifacts
+.playwright-cli/
+.tmp-*.js
+.tmp-*.cjs
+
+# Dependency folders, if the project is later migrated to a build tool
+node_modules/
+dist/
+build/
+
