@@ -11,11 +11,9 @@
 
 ## 在线体验
 
-GitHub Pages 启用后，预计访问地址为：
+在线版本：
 
 <https://ganghaosun.github.io/car-buying-calculator/>
-
-在 Pages 未启用前，可以按下方“直接使用”或“本地开发预览”的方式运行。
 
 ## 为什么做这个工具
 
@@ -29,17 +27,6 @@ GitHub Pages 启用后，预计访问地址为：
 - 赠品价值是否应该计入实际支出。
 
 这个项目的目标不是做一个“报价单美化器”，而是把每一项费用拆成清晰、可核算、可横向比较的结构，让买车时不被一个总价带着走。
-
-## 补充报告审阅结论
-
-`car-buying-calculator_补充报告.md` 中提出的方向整体合理，和本项目“拆清费用、辅助比价、降低购车决策不透明度”的目标一致。适合采纳的方向包括：
-
-- 低成本高收益能力：GitHub Pages、README 增强、数据导入/导出、结果文本分享。
-- 核心场景补齐：贷款/分期购车计算、保险费用估算。
-- 可维护性提升：政策参数外部化、输入校验、无障碍改进。
-- 体验增强：浅色/深色主题、对比图表、购车清单。
-
-需要谨慎处理的是政策类参数。购置税、以旧换新、地方补贴、保险价格都会随年度、地区、车型目录和执行细则变化，README 和代码中不应把未核验的地方/年度规则写死。详细审阅和优先级见 [docs/improvement-roadmap.md](docs/improvement-roadmap.md)。
 
 ## 截图
 
@@ -227,13 +214,12 @@ http://127.0.0.1:8080/
 
 按“用户价值 × 实现成本”排序，建议优先推进：
 
-1. 启用 GitHub Pages，并在 README 中将在线体验从“预计地址”改为正式入口。
-2. 增加报价记录导入/导出，解决 localStorage 换设备和清缓存丢数据的问题。
-3. 增加结果文本分享或 Web Share API，方便把报价发给家人朋友讨论。
-4. 抽离政策参数配置，减少购置税、补贴规则更新时改错位置的风险。
-5. 增加贷款/分期购车计算，输出首付、月供、总利息和全款/贷款差额。
-6. 增加保险费用拆分，但必须标注“仅供估算，实际以保险公司报价为准”。
-7. 增强输入校验、主题切换、对比图表、无障碍和键盘操作体验。
+1. 增加报价记录导入/导出，解决 localStorage 换设备和清缓存丢数据的问题。
+2. 增加结果文本分享或 Web Share API，方便把报价发给家人朋友讨论。
+3. 抽离政策参数配置，减少购置税、补贴规则更新时改错位置的风险。
+4. 增加贷款/分期购车计算，输出首付、月供、总利息和全款/贷款差额。
+5. 增加保险费用拆分，但必须标注“仅供估算，实际以保险公司报价为准”。
+6. 增强输入校验、主题切换、对比图表、无障碍和键盘操作体验。
 
 ## 贷款购车功能规划
 
@@ -295,15 +281,15 @@ http://127.0.0.1:8080/
 - 政策数据更新请尽量附官方公告链接，并说明适用时间、地区、车型范围。
 - 新功能建议可以先在 Issue 中讨论输入字段、计算口径和展示方式，避免过早写死不稳定规则。
 
-## 更新记录
+## Update Record
 
-| 日期 | 类型 | 内容 |
+| Date | Uploaded or updated content | Notes |
 | --- | --- | --- |
-| 2026-06-14 | 文档/路线图 | 审阅补充建议报告，确认贷款、导入导出、分享、保险、主题、图表、无障碍等方向总体合理；README 新增补充报告审阅结论、近期路线图、参与贡献和本更新记录。 |
-| 2026-06-14 | 文档/展示 | README 顶部新增 License、HTML5、PWA、No Backend 徽章，并补充 GitHub Pages 在线体验的预计入口说明。 |
-| 2026-06-11 | 开源整理 | 初始化 GitHub 开源仓库，补充 MIT License、README、PWA 元信息、截图和本地运行说明。 |
-| 2026-06-11 | 功能说明 | README 明确购置税、以旧换新、补贴、赠品估值、多店对比、localStorage 隐私边界和贷款购车规划。 |
-| 2026-06-11 | 安全/口径 | 页面文案补充新能源购置税和以旧换新政策核验提示，并对用户录入内容做 HTML 转义，降低保存报价后的展示风险。 |
+| 2026-06-14 | Updated the README with a GitHub Pages online demo entry, repository badges, contribution guidance and a public update record. Removed internal review-note wording from the public README. | The online demo is served from the `main` branch root after GitHub Pages is enabled. Policy-related values remain subject to official announcements and local rules. |
+| 2026-06-14 | Added a public roadmap for planned improvements, including data import/export, result sharing, policy configuration, loan calculation, insurance estimation, validation, theme switching and accessibility improvements. | Planned items are documented as future work, not as completed features. |
+| 2026-06-11 | Added the initial public car-buying calculator web app, PWA manifest, service worker, app icons, MIT License, README and interface screenshots. | Provides a static, no-backend calculator for purchase tax breakdown, subsidy estimate, gift valuation and multi-dealer quote comparison. |
+| 2026-06-11 | Updated policy notes and display safety in the app documentation and UI text. | Clarified that new-energy purchase tax eligibility, trade-in subsidies and local subsidies must be checked against official rules; escaped saved user-provided text before rendering. |
+| Planned | Loan/instalment calculation, quote import/export, shareable summaries, insurance breakdown, policy parameter extraction and improved accessibility. | These features will be added progressively while keeping the tool usable as a pure static web app. |
 
 ## 免责声明
 
