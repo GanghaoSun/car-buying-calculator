@@ -281,15 +281,15 @@ http://127.0.0.1:8080/
 - 政策数据更新请尽量附官方公告链接，并说明适用时间、地区、车型范围。
 - 新功能建议可以先在 Issue 中讨论输入字段、计算口径和展示方式，避免过早写死不稳定规则。
 
-## Update Record
+## 更新记录
 
-| Date | Uploaded or updated content | Notes |
+| 日期 | 上传或更新内容 | 备注 |
 | --- | --- | --- |
-| 2026-06-14 | Updated the README with a GitHub Pages online demo entry, repository badges, contribution guidance and a public update record. Removed internal review-note wording from the public README. | The online demo is served from the `main` branch root after GitHub Pages is enabled. Policy-related values remain subject to official announcements and local rules. |
-| 2026-06-14 | Added a public roadmap for planned improvements, including data import/export, result sharing, policy configuration, loan calculation, insurance estimation, validation, theme switching and accessibility improvements. | Planned items are documented as future work, not as completed features. |
-| 2026-06-11 | Added the initial public car-buying calculator web app, PWA manifest, service worker, app icons, MIT License, README and interface screenshots. | Provides a static, no-backend calculator for purchase tax breakdown, subsidy estimate, gift valuation and multi-dealer quote comparison. |
-| 2026-06-11 | Updated policy notes and display safety in the app documentation and UI text. | Clarified that new-energy purchase tax eligibility, trade-in subsidies and local subsidies must be checked against official rules; escaped saved user-provided text before rendering. |
-| Planned | Loan/instalment calculation, quote import/export, shareable summaries, insurance breakdown, policy parameter extraction and improved accessibility. | These features will be added progressively while keeping the tool usable as a pure static web app. |
+| 2026-06-14 | 更新 README，补充 GitHub Pages 在线体验入口、项目徽章、参与贡献说明和公开更新记录；移除不适合放在线上仓库的内部审阅措辞。 | 在线体验由 `main` 分支根目录通过 GitHub Pages 发布。购置税、以旧换新、地方补贴等政策口径仍以官方公告和当地执行细则为准。 |
+| 2026-06-14 | 梳理后续完善方向，包括报价记录导入/导出、结果分享、政策参数配置、贷款购车计算、保险费用估算、输入校验、主题切换和无障碍优化。 | 这些内容属于后续计划，不写成已完成功能，避免误导使用者。 |
+| 2026-06-11 | 添加购车费用计算器 Web 应用、PWA 配置、Service Worker、应用图标、MIT License、README 和界面截图。 | 提供一个纯静态、无后端的购车落地价核算工具，支持购置税拆解、补贴估算、赠品估值和多店报价对比。 |
+| 2026-06-11 | 更新应用文案中的政策提示和展示安全处理。 | 明确新能源购置税、以旧换新补贴、地方补贴需要以官方规则核验；对保存后的用户录入文本进行转义后再展示。 |
+| 后续计划 | 增加贷款/分期购车计算、报价导入/导出、摘要分享、保险拆分、政策参数抽离和无障碍优化。 | 在保持纯静态、可直接部署的前提下逐步完善。 |
 
 ## 免责声明
 
