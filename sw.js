@@ -1,6 +1,6 @@
 // 购车比价计算器 - Service Worker
 // 版本号：每次更新文件时修改此处
-const CACHE_NAME = 'car-calc-v2';
+const CACHE_NAME = 'car-calc-v3';
 
 // 需要缓存的文件列表
 const FILES_TO_CACHE = [
