@@ -43,15 +43,29 @@ function tradeInSubsidy(invoicePrice, mode, carType, displacement) {
   return rule ? Math.min(Math.ceil(invoicePrice * rule.rate), rule.cap) : 0;
 }
 
-function loanQuote({ invoicePrice, tax, extraExpense, otherSubsidy, nationalSubsidy, downPaymentRatio, annualRate, months, financeFee }) {
-  const downPayment = invoicePrice * downPaymentRatio / 100;
+function resolveDownPayment(invoicePrice, downPaymentMode, downPaymentRatio, downPaymentAmount) {
+  if (downPaymentMode === 'amount') {
+    return {
+      downPayment: downPaymentAmount,
+      downPaymentRatio: downPaymentAmount / invoicePrice * 100
+    };
+  }
+  return {
+    downPayment: invoicePrice * downPaymentRatio / 100,
+    downPaymentRatio
+  };
+}
+
+function loanQuote({ invoicePrice, tax, extraExpense, otherSubsidy, nationalSubsidy, downPaymentMode = 'ratio', downPaymentRatio = 0, downPaymentAmount = 0, annualRate, months, financeFee }) {
+  const resolved = resolveDownPayment(invoicePrice, downPaymentMode, downPaymentRatio, downPaymentAmount);
+  const downPayment = resolved.downPayment;
   const principal = invoicePrice - downPayment;
   const monthlyPayment = equalPayment(principal, annualRate, months);
   const totalRepayment = monthlyPayment * months;
   const totalInterest = totalRepayment - principal;
   const payNow = downPayment + tax + extraExpense + financeFee;
   const finalCost = downPayment + totalRepayment + tax + extraExpense + financeFee - nationalSubsidy - otherSubsidy;
-  return { downPayment, principal, monthlyPayment, totalRepayment, totalInterest, payNow, finalCost };
+  return { downPayment, downPaymentRatio: resolved.downPaymentRatio, principal, monthlyPayment, totalRepayment, totalInterest, payNow, finalCost };
 }
 
 function run() {
@@ -93,6 +107,22 @@ function run() {
   nearlyEqual(loan.payNow, 79000);
   nearlyEqual(loan.finalCost, loan.downPayment + loan.totalRepayment + 10000 + 7000 + 2000 - 12000 - 3000);
   assert.ok(loan.totalInterest > 0);
+
+  const amountModeLoan = loanQuote({
+    invoicePrice: 200000,
+    tax: 10000,
+    extraExpense: 7000,
+    otherSubsidy: 3000,
+    nationalSubsidy: 12000,
+    downPaymentMode: 'amount',
+    downPaymentAmount: 80000,
+    annualRate: 4,
+    months: 36,
+    financeFee: 2000
+  });
+  nearlyEqual(amountModeLoan.downPayment, 80000);
+  nearlyEqual(amountModeLoan.downPaymentRatio, 40);
+  nearlyEqual(amountModeLoan.principal, 120000);
 
   console.log('calculator tests passed');
 }
