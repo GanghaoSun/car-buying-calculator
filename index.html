@@ -225,6 +225,7 @@ input::placeholder{color:var(--text-dimmer)}
 .rc-tag.nev{color:var(--accent2);border-color:rgba(0,255,157,.3);background:rgba(0,255,157,.08)}
 .rc-tag.fuel{color:var(--warn);border-color:rgba(255,171,64,.3);background:rgba(255,171,64,.08)}
 .rc-tag.trade{color:var(--accent);border-color:rgba(0,212,255,.3);background:rgba(0,212,255,.08)}
+.rc-tag.loan{color:var(--gift);border-color:rgba(217,70,239,.3);background:rgba(217,70,239,.08)}
 
 .record-card .rc-actions{display:flex;gap:8px;justify-content:flex-end;padding-top:10px;border-top:1px solid var(--border)}
 
@@ -249,6 +250,7 @@ input::placeholder{color:var(--text-dimmer)}
 .s2{--section-accent:linear-gradient(90deg,#ff6b35,#ff9f43)}.s2 .section-icon{background:rgba(255,107,53,.15)}
 .s3{--section-accent:linear-gradient(90deg,#00ff9d,#00d4ff)}.s3 .section-icon{background:rgba(0,255,157,.15)}
 .s4{--section-accent:linear-gradient(90deg,#ffd700,#ff6b35)}.s4 .section-icon{background:rgba(255,215,0,.15)}
+.s-loan{--section-accent:linear-gradient(90deg,#d946ef,#00d4ff)}.s-loan .section-icon{background:rgba(217,70,239,.15)}
 .s-expense{--section-accent:linear-gradient(90deg,#ff6b35,#ffab40)}.s-expense .section-icon{background:rgba(255,107,53,.15)}
 .s-income{--section-accent:linear-gradient(90deg,#00ff9d,#00bfff)}.s-income .section-icon{background:rgba(0,255,157,.15)}
 .s-gift{--section-accent:linear-gradient(90deg,#d946ef,#a855f7)}.s-gift .section-icon{background:rgba(217,70,239,.15)}
@@ -392,6 +394,56 @@ footer a:hover{color:var(--accent)}
     </div>
   </div>
 
+  <!-- ② 付款方式 -->
+  <div class="section-card s-loan">
+    <div class="section-title"><div class="section-icon">💳</div>付款方式与贷款方案</div>
+    <div class="form-group" style="margin-bottom:16px">
+      <label>购车方式<span class="required">*</span></label>
+      <div class="radio-group">
+        <div class="radio-option"><input type="radio" name="paymentMethod" id="payFull" value="full" onchange="onPaymentMethodChange()" checked><label for="payFull">💵 全款购车</label></div>
+        <div class="radio-option"><input type="radio" name="paymentMethod" id="payLoan" value="loan" onchange="onPaymentMethodChange()"><label for="payLoan">🏦 贷款购车</label></div>
+      </div>
+    </div>
+    <div class="conditional" id="loanFields">
+      <div class="conditional-inner">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>首付比例<span class="required">*</span></label>
+            <div class="input-suffix">
+              <input type="number" id="downPaymentRatio" value="30" min="0" max="99" step="1">
+              <span class="suffix-text">%</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>贷款期数<span class="required">*</span></label>
+            <select id="loanMonths">
+              <option value="12">12 期</option>
+              <option value="24">24 期</option>
+              <option value="36" selected>36 期</option>
+              <option value="48">48 期</option>
+              <option value="60">60 期</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>年化利率<span class="required">*</span></label>
+            <div class="input-suffix">
+              <input type="number" id="annualRate" value="4" min="0" max="30" step="0.01">
+              <span class="suffix-text">%</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>金融服务费 <span class="hint">（如无则填0）</span></label>
+            <div class="input-suffix">
+              <input type="number" id="financeFee" value="0" min="0" step="0.01">
+              <span class="suffix-text">元</span>
+            </div>
+          </div>
+        </div>
+        <div class="alert alert-info"><span class="alert-icon">ℹ️</span><div>贷款按等额本息估算，真实审批利率、贴息、抵押/GPS/解押等费用以金融合同为准。金融服务费会计入首期垫付和贷款真实总成本。</div></div>
+      </div>
+    </div>
+  </div>
+
   <!-- ② 厂商优惠 -->
   <div class="section-card s2">
     <div class="section-title">
@@ -466,7 +518,7 @@ footer a:hover{color:var(--accent)}
         </div>
         <div class="form-group">
           <label>旧车注册日期<span class="required">*</span> <span class="hint">（用于验证国补资格）</span></label>
-          <input type="date" id="oldCarDate" onchange="validateOldCar()" max="2025-01-08">
+          <input type="date" id="oldCarDate" onchange="validateOldCar()">
         </div>
         <div id="scrapDateAlert" class="alert" style="display:none"></div>
       </div>
@@ -485,7 +537,7 @@ footer a:hover{color:var(--accent)}
             <div class="radio-option"><input type="radio" name="owned1Year" id="owned1No" value="no"><label for="owned1No">❌ 否</label></div>
           </div>
         </div>
-        <div class="alert alert-warn"><span class="alert-icon">⚠️</span><div>旧车须在<strong>2025年1月8日前</strong>登记在申请人名下满1年，否则无法享受国补。</div></div>
+        <div class="alert alert-warn"><span class="alert-icon">⚠️</span><div>旧车须在<strong id="ownershipCutoffText">2025年1月8日前</strong>登记在申请人名下满1年，否则无法享受国补。</div></div>
       </div>
     </div>
   </div>
@@ -563,8 +615,8 @@ footer a:hover{color:var(--accent)}
   <!-- 三格摘要 -->
   <div class="result-summary">
     <div class="summary-grid">
-      <div class="summary-item"><div class="s-label">提车时需垫付</div><div class="s-value s-pay" id="sumPay">—</div><div class="s-sub">含购置税+其他费用</div></div>
-      <div class="summary-item"><div class="s-label">实际总支出</div><div class="s-value s-final" id="sumFinal">—</div><div class="s-sub">扣除所有补贴后</div></div>
+      <div class="summary-item"><div class="s-label" id="sumPayLabel">提车时需垫付</div><div class="s-value s-pay" id="sumPay">—</div><div class="s-sub" id="sumPaySub">含购置税+其他费用</div></div>
+      <div class="summary-item"><div class="s-label" id="sumFinalLabel">实际总支出</div><div class="s-value s-final" id="sumFinal">—</div><div class="s-sub" id="sumFinalSub">扣除所有补贴后</div></div>
       <div class="summary-item"><div class="s-label">赠品总价值</div><div class="s-value s-gift" id="sumGift">—</div><div class="s-sub">不计入支出</div></div>
     </div>
     <div class="savings-badge">
@@ -596,8 +648,26 @@ footer a:hover{color:var(--accent)}
       </div>
       <div class="section-divider"></div>
       <div class="result-row hl-warn">
-        <div class="result-label"><div class="dot" style="background:var(--warn)"></div><div><strong>提车时需支付</strong><br><small style="color:var(--text-dimmer)">开票价+购置税+其他费用</small></div></div>
+        <div class="result-label"><div class="dot" style="background:var(--warn)"></div><div><strong id="rPayLabel">提车时需支付</strong><br><small id="rPayNote" style="color:var(--text-dimmer)">开票价+购置税+其他费用</small></div></div>
         <div class="result-value"><span class="amount" id="rPayNow">—</span></div>
+      </div>
+      <div id="loanDetailBlock" style="display:none">
+        <div class="result-row hl-blue">
+          <div class="result-label"><div class="dot" style="background:var(--accent)"></div><div><strong>首付金额</strong><br><small style="color:var(--text-dimmer)">开票价 × 首付比例</small></div></div>
+          <div class="result-value"><span class="amount" id="rDownPayment">—</span></div>
+        </div>
+        <div class="result-row hl-blue">
+          <div class="result-label"><div class="dot" style="background:var(--accent)"></div><div><strong>贷款本金</strong><br><small style="color:var(--text-dimmer)">开票价 − 首付</small></div></div>
+          <div class="result-value"><span class="amount" id="rLoanPrincipal">—</span></div>
+        </div>
+        <div class="result-row hl-blue">
+          <div class="result-label"><div class="dot" style="background:var(--accent)"></div><div><strong>月供</strong><br><small id="rLoanTermNote" style="color:var(--text-dimmer)">等额本息估算</small></div></div>
+          <div class="result-value"><span class="amount" id="rMonthlyPayment">—</span></div>
+        </div>
+        <div class="result-row hl-warn">
+          <div class="result-label"><div class="dot" style="background:var(--warn)"></div><div><strong>总利息与金融服务费</strong><br><small style="color:var(--text-dimmer)">计入贷款真实总成本</small></div></div>
+          <div class="result-value"><span class="amount" id="rLoanExtra">—</span><span class="note" id="rFinanceFeeNote"></span></div>
+        </div>
       </div>
       <div class="result-row hl-green">
         <div class="result-label"><div class="dot" style="background:var(--accent2)"></div><div><strong>以旧换新国补</strong></div></div>
@@ -609,7 +679,7 @@ footer a:hover{color:var(--accent)}
       </div>
       <div class="section-divider"></div>
       <div class="result-row hl-green">
-        <div class="result-label"><div class="dot" style="background:var(--accent2)"></div><div><strong>实际总支出</strong><br><small style="color:var(--text-dimmer)">提车垫付 − 国补 − 其他补贴</small></div></div>
+        <div class="result-label"><div class="dot" style="background:var(--accent2)"></div><div><strong id="rFinalLabel">实际总支出</strong><br><small id="rFinalNote" style="color:var(--text-dimmer)">提车垫付 − 国补 − 其他补贴</small></div></div>
         <div class="result-value"><span class="amount" id="rFinal">—</span></div>
       </div>
       <div id="rGiftRow" class="result-row" style="display:none;border-top:1px dashed var(--border);margin-top:4px">
@@ -629,6 +699,7 @@ footer a:hover{color:var(--accent)}
   <div class="btn-row">
     <button class="btn-ghost" onclick="goPage(1)">← 返回修改</button>
     <button class="btn-sec" onclick="openProcessModal()">🧮 查看计算过程</button>
+    <button class="btn-sec" onclick="shareResult()">📋 复制/分享摘要</button>
     <button class="btn-save" onclick="openSaveModal()">💾 保存报价记录</button>
   </div>
 
@@ -648,6 +719,9 @@ footer a:hover{color:var(--accent)}
   <div class="records-header">
     <div class="records-count" id="recordsCount">共 0 条记录</div>
     <div style="flex:1"></div>
+    <button class="btn-sec" onclick="exportRecords()" style="font-size:12px">⬇ 导出JSON</button>
+    <button class="btn-sec" onclick="exportRecordsCSV()" style="font-size:12px">表格CSV</button>
+    <button class="btn-sec" onclick="importRecords()" style="font-size:12px">⬆ 导入JSON</button>
     <button class="btn-ghost" onclick="goPage(1)" style="font-size:12px">← 返回录入</button>
     <button class="btn-danger" id="clearAllBtn" onclick="clearAllRecords()" style="display:none">🗑 清空全部</button>
   </div>
@@ -667,6 +741,32 @@ footer a:hover{color:var(--accent)}
    STATE
 ========================================================== */
 let lastCalcResult = null; // 最近一次计算结果，用于保存
+
+const POLICY = {
+  version: '2026-2027-public-estimate',
+  updatedAt: '2026-06-28',
+  vat: { defaultRate: 13 },
+  purchaseTax: {
+    rate: 0.10,
+    nevDiscount: { rate: 0.05, cap: 15000 }
+  },
+  tradeIn: {
+    ownershipCutoff: '2025-01-08',
+    oldCarDeadline: {
+      gas: '2013-06-30',
+      diesel: '2015-06-30',
+      nev: '2019-12-31'
+    },
+    scrap: {
+      nev: { rate: 0.12, cap: 20000, label: '报废+新能源' },
+      fuelLe2: { rate: 0.10, cap: 15000, label: '报废+燃油(≤2L)' }
+    },
+    swap: {
+      nev: { rate: 0.08, cap: 15000, label: '置换+新能源' },
+      fuelLe2: { rate: 0.06, cap: 13000, label: '置换+燃油(≤2L)' }
+    }
+  }
+};
 
 /* ==========================================================
    页面切换
@@ -741,6 +841,11 @@ function onCarTypeChange() {
   document.getElementById('nevAlert').style.display = v === 'nev' ? 'flex' : 'none';
 }
 
+function onPaymentMethodChange() {
+  const v = document.querySelector('input[name="paymentMethod"]:checked')?.value || 'full';
+  document.getElementById('loanFields').classList.toggle('visible', v === 'loan');
+}
+
 function onTradeInChange() {
   const v = document.querySelector('input[name="tradeIn"]:checked')?.value;
   document.getElementById('scrapFields').classList.toggle('visible', v === 'scrap');
@@ -755,7 +860,7 @@ function validateOldCar() {
   const el = document.getElementById('scrapDateAlert');
   if (!t || !dv) { el.style.display='none'; return; }
   const d = new Date(dv);
-  const L = { gas: new Date('2013-06-30'), diesel: new Date('2015-06-30'), nev: new Date('2019-12-31') };
+  const L = Object.fromEntries(Object.entries(POLICY.tradeIn.oldCarDeadline).map(([key, value]) => [key, new Date(value)]));
   const N = { gas:'汽油车', diesel:'柴油车', nev:'新能源车' };
   const ok = d <= L[t];
   el.className = 'alert alert-' + (ok ? 'success' : 'danger');
@@ -778,16 +883,44 @@ function collectDetails(containerId, amtCls) {
   return items;
 }
 
+function calcEqualPayment(principal, annualRate, months) {
+  const monthlyRate = annualRate / 100 / 12;
+  if (principal <= 0 || months <= 0) return 0;
+  if (monthlyRate === 0) return principal / months;
+  const factor = Math.pow(1 + monthlyRate, months);
+  return principal * monthlyRate * factor / (factor - 1);
+}
+
+function calcTradeInSubsidy(invoicePrice, rule) {
+  if (!rule) return 0;
+  return Math.min(Math.ceil(invoicePrice * rule.rate), rule.cap);
+}
+
+function getTradeInRule(tradeIn, carType, displacement) {
+  const group = POLICY.tradeIn[tradeIn];
+  if (!group) return null;
+  if (carType === 'nev') return group.nev;
+  if (carType === 'fuel' && displacement === 'le2') return group.fuelLe2;
+  return null;
+}
+
 /* ==========================================================
    核心计算
 ========================================================== */
 function calculate() {
   const guidePrice   = parseFloat(document.getElementById('guidePrice').value) || 0;
-  const vatRate      = parseFloat(document.getElementById('vatRate').value) || 13;
+  const vatRate      = parseFloat(document.getElementById('vatRate').value) || POLICY.vat.defaultRate;
   const mfrSubsidy   = sumClass('mfr-amt');
   const extraExpense = sumClass('exp-amt');
   const otherSubsidy = sumClass('sub-amt');
   const giftValue    = sumClass('gift-amt');
+
+  const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value || 'full';
+  const isLoan        = paymentMethod === 'loan';
+  const downPaymentRatio = isLoan ? (parseFloat(document.getElementById('downPaymentRatio').value) || 0) : 100;
+  const loanMonths       = isLoan ? (parseInt(document.getElementById('loanMonths').value, 10) || 0) : 0;
+  const annualRate       = isLoan ? (parseFloat(document.getElementById('annualRate').value) || 0) : 0;
+  const financeFee       = isLoan ? (parseFloat(document.getElementById('financeFee').value) || 0) : 0;
 
   const carType      = document.querySelector('input[name="carType"]:checked')?.value;
   const nevType      = document.querySelector('input[name="nevType"]:checked')?.value;
@@ -802,6 +935,10 @@ function calculate() {
   if (carType==='nev' && !nevType)         { showModal('⚠️','<p>请选择新能源细分类别。</p>'); return; }
   if (carType==='fuel' && !displacement)   { showModal('⚠️','<p>请选择燃油车发动机排量。</p>'); return; }
   if ((tradeIn==='scrap'||tradeIn==='swap') && !owned1Year) { showModal('⚠️','<p>请确认旧车是否在本人名下满1年。</p>'); return; }
+  if (isLoan && (downPaymentRatio < 0 || downPaymentRatio >= 100)) { showModal('⚠️','<p>贷款购车的首付比例应在 0% 到 99% 之间。</p>'); return; }
+  if (isLoan && loanMonths <= 0)            { showModal('⚠️','<p>请选择有效的贷款期数。</p>'); return; }
+  if (isLoan && annualRate < 0)             { showModal('⚠️','<p>年化利率不能为负数。</p>'); return; }
+  if (isLoan && financeFee < 0)             { showModal('⚠️','<p>金融服务费不能为负数。</p>'); return; }
 
   const invoicePrice = guidePrice - mfrSubsidy;
   if (invoicePrice <= 0) { showModal('⚠️','<p>开票价格不能为零或负数，请检查输入。</p>'); return; }
@@ -811,16 +948,17 @@ function calculate() {
 
   // 购置税
   let tax, taxNote, taxCap = null;
+  const rawTax = exTaxPrice * POLICY.purchaseTax.rate;
   if (carType === 'nev') {
-    taxCap = 15000;
-    const reduction = Math.min(exTaxPrice * 0.05, taxCap);
-    tax = exTaxPrice * 0.10 - reduction;
+    taxCap = POLICY.purchaseTax.nevDiscount.cap;
+    const reduction = Math.min(exTaxPrice * POLICY.purchaseTax.nevDiscount.rate, taxCap);
+    tax = Math.max(0, rawTax - reduction);
     taxNote = reduction >= taxCap
-      ? '新能源减半，减免已达上限15000元'
-      : '新能源减半（5%），减免 ' + fmt(reduction) + ' 元';
+      ? `新能源减半，减免已达上限${fmt(taxCap)}元`
+      : `新能源减半（${(POLICY.purchaseTax.nevDiscount.rate * 100).toFixed(0)}%），减免 ${fmt(reduction)} 元`;
   } else {
-    tax = exTaxPrice * 0.10;
-    taxNote = '燃油车全额（10%）';
+    tax = rawTax;
+    taxNote = `燃油车全额（${(POLICY.purchaseTax.rate * 100).toFixed(0)}%）`;
   }
 
   // 以旧换新国补
@@ -839,7 +977,7 @@ function calculate() {
         nationalAlerts.push({ type:'warn', msg:'报废更新需填写旧车类型和注册时间。' });
       } else {
         const d = new Date(oldCarDate);
-        const L = { gas:new Date('2013-06-30'), diesel:new Date('2015-06-30'), nev:new Date('2019-12-31') };
+        const L = Object.fromEntries(Object.entries(POLICY.tradeIn.oldCarDeadline).map(([key, value]) => [key, new Date(value)]));
         const N = { gas:'汽油车', diesel:'柴油车', nev:'新能源车' };
         if (d > L[oldCarType]) {
           eligible = false;
@@ -847,36 +985,58 @@ function calculate() {
         }
       }
       if (eligible) {
-        if (carType === 'nev') {
-          nationalSubsidy = Math.min(Math.ceil(invoicePrice*0.12), 20000);
-          nationalNote = `报废+新能源：开票价×12%=${fmt(invoicePrice*0.12)}元` + (invoicePrice*0.12>20000 ? '，封顶20000元' : '');
-        } else if (carType==='fuel' && displacement==='le2') {
-          nationalSubsidy = Math.min(Math.ceil(invoicePrice*0.10), 15000);
-          nationalNote = `报废+燃油(≤2L)：开票价×10%=${fmt(invoicePrice*0.10)}元` + (invoicePrice*0.10>15000 ? '，封顶15000元' : '');
+        const rule = getTradeInRule('scrap', carType, displacement);
+        if (rule) {
+          nationalSubsidy = calcTradeInSubsidy(invoicePrice, rule);
+          const expected = invoicePrice * rule.rate;
+          nationalNote = `${rule.label}：开票价×${(rule.rate*100).toFixed(0)}%=${fmt(expected)}元` + (expected > rule.cap ? `，封顶${fmt(rule.cap)}元` : '');
         } else {
           nationalNote = '2.0L以上燃油车不享受国补';
           nationalAlerts.push({ type:'warn', msg:'2.0L以上燃油车不享受以旧换新国补。' });
         }
       }
     } else if (tradeIn==='swap' && eligible) {
-      if (carType === 'nev') {
-        nationalSubsidy = Math.min(Math.ceil(invoicePrice*0.08), 15000);
-        nationalNote = `置换+新能源：开票价×8%=${fmt(invoicePrice*0.08)}元` + (invoicePrice*0.08>15000 ? '，封顶15000元' : '');
-      } else if (carType==='fuel' && displacement==='le2') {
-        nationalSubsidy = Math.min(Math.ceil(invoicePrice*0.06), 13000);
-        nationalNote = `置换+燃油(≤2L)：开票价×6%=${fmt(invoicePrice*0.06)}元` + (invoicePrice*0.06>13000 ? '，封顶13000元' : '');
+      const rule = getTradeInRule('swap', carType, displacement);
+      if (rule) {
+        nationalSubsidy = calcTradeInSubsidy(invoicePrice, rule);
+        const expected = invoicePrice * rule.rate;
+        nationalNote = `${rule.label}：开票价×${(rule.rate*100).toFixed(0)}%=${fmt(expected)}元` + (expected > rule.cap ? `，封顶${fmt(rule.cap)}元` : '');
       } else {
         nationalNote = '2.0L以上燃油车不享受国补';
         nationalAlerts.push({ type:'warn', msg:'2.0L以上燃油车不享受以旧换新国补。' });
       }
     }
+    if (!eligible && !nationalNote) nationalNote = '不满足以旧换新国补条件';
   } else {
     nationalNote = '未参与以旧换新';
   }
 
-  const payNow      = invoicePrice + tax + extraExpense;
-  const finalCost   = payNow - (nationalSubsidy + otherSubsidy);
-  const taxSaving   = taxCap !== null ? (exTaxPrice*0.10 - tax) : 0;
+  let loanInfo = null;
+  let payNow, finalCost;
+  if (isLoan) {
+    const downPayment = invoicePrice * downPaymentRatio / 100;
+    const loanPrincipal = invoicePrice - downPayment;
+    const monthlyPayment = calcEqualPayment(loanPrincipal, annualRate, loanMonths);
+    const totalRepayment = monthlyPayment * loanMonths;
+    const totalInterest = Math.max(0, totalRepayment - loanPrincipal);
+    payNow = downPayment + tax + extraExpense + financeFee;
+    finalCost = downPayment + totalRepayment + tax + extraExpense + financeFee - (nationalSubsidy + otherSubsidy);
+    loanInfo = {
+      downPaymentRatio,
+      downPayment,
+      loanPrincipal,
+      loanMonths,
+      annualRate,
+      monthlyPayment,
+      totalRepayment,
+      totalInterest,
+      financeFee
+    };
+  } else {
+    payNow = invoicePrice + tax + extraExpense;
+    finalCost = payNow - (nationalSubsidy + otherSubsidy);
+  }
+  const taxSaving   = taxCap !== null ? (rawTax - tax) : 0;
   const totalSavings = mfrSubsidy + taxSaving + nationalSubsidy + otherSubsidy;
 
   const expDetails  = collectDetails('expenseRows','exp-amt');
@@ -894,34 +1054,47 @@ function calculate() {
   process += `不含税价格        ${fmt(invoicePrice)} ÷ ${vatMult.toFixed(2)} = ${fmt(exTaxPrice)} 元\n\n`;
   process += `─── 购置税计算 ───\n`;
   if (carType === 'nev') {
-    const _red = Math.min(exTaxPrice*0.05, 15000);
-    process += `原始税额（10%）   ${fmt(exTaxPrice)} × 10% = ${fmt(exTaxPrice*0.10)} 元\n`;
-    process += `减免额（×5%,封顶1.5万）- ${fmt(_red)} 元\n`;
-    if (_red >= 15000) process += `减免已达上限      15000.00 元\n`;
+    const _red = Math.min(exTaxPrice * POLICY.purchaseTax.nevDiscount.rate, POLICY.purchaseTax.nevDiscount.cap);
+    process += `原始税额（${(POLICY.purchaseTax.rate*100).toFixed(0)}%）   ${fmt(exTaxPrice)} × ${(POLICY.purchaseTax.rate*100).toFixed(0)}% = ${fmt(rawTax)} 元\n`;
+    process += `减免额（×${(POLICY.purchaseTax.nevDiscount.rate*100).toFixed(0)}%,封顶${fmt(POLICY.purchaseTax.nevDiscount.cap)}）- ${fmt(_red)} 元\n`;
+    if (_red >= POLICY.purchaseTax.nevDiscount.cap) process += `减免已达上限      ${fmt(POLICY.purchaseTax.nevDiscount.cap)} 元\n`;
   } else {
-    process += `燃油车全额        ${fmt(exTaxPrice)} × 10% = ${fmt(exTaxPrice*0.10)} 元\n`;
+    process += `燃油车全额        ${fmt(exTaxPrice)} × ${(POLICY.purchaseTax.rate*100).toFixed(0)}% = ${fmt(rawTax)} 元\n`;
   }
   process += `实缴购置税        ${fmt(tax)} 元\n\n`;
   if (tradeIn !== 'none') {
     process += `─── 以旧换新国补 ───\n`;
     if (nationalSubsidy > 0) {
-      if (tradeIn==='scrap' && carType==='nev')  process += `报废+新能源    ${fmt(invoicePrice)} × 12% = ${fmt(invoicePrice*0.12)} 元\n向上取整封顶   ${fmt(nationalSubsidy)} 元\n`;
-      else if (tradeIn==='scrap' && carType==='fuel') process += `报废+燃油(≤2L) ${fmt(invoicePrice)} × 10% = ${fmt(invoicePrice*0.10)} 元\n向上取整封顶   ${fmt(nationalSubsidy)} 元\n`;
-      else if (tradeIn==='swap'  && carType==='nev')  process += `置换+新能源    ${fmt(invoicePrice)} × 8% = ${fmt(invoicePrice*0.08)} 元\n向上取整封顶   ${fmt(nationalSubsidy)} 元\n`;
-      else if (tradeIn==='swap'  && carType==='fuel') process += `置换+燃油(≤2L) ${fmt(invoicePrice)} × 6% = ${fmt(invoicePrice*0.06)} 元\n向上取整封顶   ${fmt(nationalSubsidy)} 元\n`;
+      const rule = getTradeInRule(tradeIn, carType, displacement);
+      process += `${rule.label.padEnd(12)} ${fmt(invoicePrice)} × ${(rule.rate*100).toFixed(0)}% = ${fmt(invoicePrice*rule.rate)} 元\n向上取整封顶   ${fmt(nationalSubsidy)} 元\n`;
     } else { process += `国补：不符合条件或无补贴\n`; }
     process += `\n`;
   }
+  if (loanInfo) {
+    process += `─── 贷款方案（等额本息估算） ───\n`;
+    process += `首付比例          ${fmt(loanInfo.downPaymentRatio)}%\n`;
+    process += `首付金额          ${fmt(loanInfo.downPayment)} 元\n`;
+    process += `贷款本金          ${fmt(loanInfo.loanPrincipal)} 元\n`;
+    process += `贷款期数          ${loanInfo.loanMonths} 期\n`;
+    process += `年化利率          ${fmt(loanInfo.annualRate)}%\n`;
+    process += `月供              ${fmt(loanInfo.monthlyPayment)} 元\n`;
+    process += `总利息            ${fmt(loanInfo.totalInterest)} 元\n`;
+    process += `金融服务费        ${fmt(loanInfo.financeFee)} 元\n\n`;
+  }
   process += `─── 费用汇总 ───\n`;
-  process += `开票价格          ${fmt(invoicePrice)} 元\n`;
+  process += loanInfo ? `首付金额          ${fmt(loanInfo.downPayment)} 元\n` : `开票价格          ${fmt(invoicePrice)} 元\n`;
   process += `购置税         +  ${fmt(tax)} 元\n`;
   expDetails.forEach(d => { process += `${d.name.padEnd(10)}+  ${fmt(d.amt)} 元\n`; });
+  if (loanInfo) process += `金融服务费     +  ${fmt(loanInfo.financeFee)} 元\n`;
   process += `                 ────────────\n`;
-  process += `提车时支付        ${fmt(payNow)} 元\n\n`;
+  process += `${loanInfo ? '首期需垫付' : '提车时支付'}        ${fmt(payNow)} 元\n\n`;
+  if (loanInfo) {
+    process += `贷款总还款     +  ${fmt(loanInfo.totalRepayment)} 元（含本金和利息）\n`;
+  }
   process += `以旧换新国补   -  ${fmt(nationalSubsidy)} 元\n`;
   subDetails.forEach(d => { process += `${d.name.padEnd(10)}-  ${fmt(d.amt)} 元\n`; });
   process += `                 ────────────\n`;
-  process += `实际总支出        ${fmt(finalCost)} 元\n`;
+  process += `${loanInfo ? '贷款真实总成本' : '实际总支出'}    ${fmt(finalCost)} 元\n`;
   if (giftValue > 0) {
     process += `\n─── 赠品 ───\n`;
     giftDetails.forEach(d => { process += `${d.name.padEnd(10)}   ${fmt(d.amt)} 元\n`; });
@@ -942,10 +1115,29 @@ function calculate() {
   document.getElementById('rSubDetail').textContent    = subDetails.map(d=>d.name+' '+fmt(d.amt)+'元').join(' · ') || '暂无明细';
   document.getElementById('rPayNow').textContent       = fmt(payNow) + ' 元';
   document.getElementById('rFinal').textContent        = fmt(finalCost) + ' 元';
+  document.getElementById('rPayLabel').textContent     = loanInfo ? '首期需垫付' : '提车时需支付';
+  document.getElementById('rPayNote').textContent      = loanInfo ? '首付+购置税+其他费用+金融服务费' : '开票价+购置税+其他费用';
+  document.getElementById('rFinalLabel').textContent   = loanInfo ? '贷款真实总成本' : '实际总支出';
+  document.getElementById('rFinalNote').textContent    = loanInfo ? '首付+贷款总还款+税费+金融费−补贴' : '提车垫付 − 国补 − 其他补贴';
+  document.getElementById('sumPayLabel').textContent   = loanInfo ? '首期需垫付' : '提车时需垫付';
+  document.getElementById('sumPaySub').textContent     = loanInfo ? '首付+税费+服务费' : '含购置税+其他费用';
+  document.getElementById('sumFinalLabel').textContent = loanInfo ? '贷款真实总成本' : '实际总支出';
+  document.getElementById('sumFinalSub').textContent   = loanInfo ? '含总利息，扣补贴后' : '扣除所有补贴后';
   document.getElementById('sumPay').textContent        = fmt(payNow) + ' 元';
   document.getElementById('sumFinal').textContent      = fmt(finalCost) + ' 元';
   document.getElementById('sumGift').textContent       = giftValue > 0 ? fmt(giftValue) + ' 元' : '—';
   document.getElementById('sumSavings').textContent    = fmt(totalSavings) + ' 元';
+
+  const loanBlock = document.getElementById('loanDetailBlock');
+  loanBlock.style.display = loanInfo ? 'block' : 'none';
+  if (loanInfo) {
+    document.getElementById('rDownPayment').textContent = fmt(loanInfo.downPayment) + ' 元';
+    document.getElementById('rLoanPrincipal').textContent = fmt(loanInfo.loanPrincipal) + ' 元';
+    document.getElementById('rMonthlyPayment').textContent = fmt(loanInfo.monthlyPayment) + ' 元/月';
+    document.getElementById('rLoanTermNote').textContent = `${loanInfo.loanMonths}期 · 年化${fmt(loanInfo.annualRate)}% · 等额本息估算`;
+    document.getElementById('rLoanExtra').textContent = fmt(loanInfo.totalInterest + loanInfo.financeFee) + ' 元';
+    document.getElementById('rFinanceFeeNote').textContent = `总利息 ${fmt(loanInfo.totalInterest)} 元 · 服务费 ${fmt(loanInfo.financeFee)} 元`;
+  }
 
   let savParts = [];
   if (mfrSubsidy > 0)       savParts.push('厂商补贴 ' + fmt(mfrSubsidy) + '元');
@@ -985,21 +1177,89 @@ function calculate() {
   // 更新 page2 标题
   const carTypeLabel = carType === 'nev' ? (nevType === 'bev' ? '纯电动' : nevType === 'phev' ? '插混/增程' : '燃料电池') : (displacement === 'le2' ? '燃油车≤2L' : '燃油车>2L');
   document.getElementById('p2Title').textContent = `费用明细`;
-  document.getElementById('p2Subtitle').textContent = `指导价 ${fmt(guidePrice)}元 · ${carTypeLabel} · ${tradeIn === 'none' ? '不换购' : tradeIn === 'scrap' ? '报废更新' : '置换更新'}`;
+  document.getElementById('p2Subtitle').textContent = `指导价 ${fmt(guidePrice)}元 · ${carTypeLabel} · ${paymentMethod === 'loan' ? '贷款购车' : '全款购车'} · ${tradeIn === 'none' ? '不换购' : tradeIn === 'scrap' ? '报废更新' : '置换更新'}`;
 
   // 保存到 lastCalcResult
   lastCalcResult = {
     guidePrice, vatRate, mfrSubsidy, extraExpense, otherSubsidy, giftValue,
     invoicePrice, exTaxPrice, tax, taxNote, nationalSubsidy, nationalNote,
     payNow, finalCost, totalSavings, taxSaving,
+    paymentMethod, loanInfo, financeFee,
     carType, nevType, displacement, tradeIn,
     expDetails, subDetails, giftDetails, mfrDetails,
+    policyVersion: POLICY.version, policyUpdatedAt: POLICY.updatedAt,
     processText: process,
     calcTime: new Date().toISOString()
   };
 
   document.getElementById('processText').textContent = process;
   goPage(2);
+}
+
+function buildShareText(r = lastCalcResult) {
+  if (!r) return '';
+  const carLabel = r.carType === 'nev'
+    ? (r.nevType === 'bev' ? '纯电动' : r.nevType === 'phev' ? '插混/增程' : '燃料电池')
+    : (r.displacement === 'le2' ? '燃油车≤2L' : '燃油车>2L');
+  const tradeLabel = r.tradeIn === 'none' ? '不参与以旧换新' : (r.tradeIn === 'scrap' ? '报废更新' : '置换更新');
+  const lines = [
+    '购车报价摘要',
+    `车型口径：${carLabel} / ${r.paymentMethod === 'loan' ? '贷款购车' : '全款购车'} / ${tradeLabel}`,
+    `指导价：${fmt(r.guidePrice)} 元`,
+    `厂商优惠：${fmt(r.mfrSubsidy)} 元`,
+    `开票价：${fmt(r.invoicePrice)} 元`,
+    `购置税：${fmt(r.tax)} 元（${r.taxNote}）`,
+    `${r.paymentMethod === 'loan' ? '首期需垫付' : '提车时需垫付'}：${fmt(r.payNow)} 元`,
+    `${r.paymentMethod === 'loan' ? '贷款真实总成本' : '实际总支出'}：${fmt(r.finalCost)} 元`,
+    `以旧换新国补：${fmt(r.nationalSubsidy)} 元`,
+    `其他补贴：${fmt(r.otherSubsidy)} 元`,
+    `赠品估值：${fmt(r.giftValue)} 元`,
+    `综合等效支出：${fmt(r.finalCost - r.giftValue)} 元`
+  ];
+  if (r.loanInfo) {
+    lines.splice(7, 0,
+      `首付：${fmt(r.loanInfo.downPayment)} 元（${fmt(r.loanInfo.downPaymentRatio)}%）`,
+      `贷款本金：${fmt(r.loanInfo.loanPrincipal)} 元`,
+      `月供：${fmt(r.loanInfo.monthlyPayment)} 元 × ${r.loanInfo.loanMonths}期`,
+      `总利息：${fmt(r.loanInfo.totalInterest)} 元`,
+      `金融服务费：${fmt(r.loanInfo.financeFee)} 元`
+    );
+  }
+  lines.push('注：政策和补贴以官方公告、当地细则、合同与发票为准。');
+  return lines.join('\n');
+}
+
+async function copyTextToClipboard(text) {
+  if (navigator.clipboard && window.isSecureContext) {
+    await navigator.clipboard.writeText(text);
+    return true;
+  }
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.setAttribute('readonly', '');
+  textarea.style.position = 'fixed';
+  textarea.style.left = '-9999px';
+  document.body.appendChild(textarea);
+  textarea.select();
+  const ok = document.execCommand('copy');
+  textarea.remove();
+  return ok;
+}
+
+async function shareResult() {
+  if (!lastCalcResult) { showModal('提示','<p>请先完成计算。</p>'); return; }
+  const text = buildShareText(lastCalcResult);
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: '购车报价摘要', text });
+      return;
+    }
+    await copyTextToClipboard(text);
+    showModal('✅ 已复制', '<p>报价摘要已复制到剪贴板，可以直接发给家人或朋友讨论。</p>');
+  } catch (err) {
+    if (err && err.name === 'AbortError') return;
+    showModal('复制失败', '<p>当前浏览器不允许自动复制，请打开“查看计算过程”手动复制关键结果。</p>');
+  }
 }
 
 /* ==========================================================
@@ -1059,6 +1319,137 @@ function getRecords() {
 
 function saveRecords(records) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+}
+
+function downloadTextFile(filename, content, type) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function exportRecords() {
+  const records = getRecords();
+  if (!records.length) { showModal('暂无记录', '<p>当前没有可导出的报价记录。</p>'); return; }
+  const date = new Date().toISOString().slice(0, 10);
+  const payload = {
+    app: 'car-buying-calculator',
+    exportedAt: new Date().toISOString(),
+    policyVersion: POLICY.version,
+    records
+  };
+  downloadTextFile(`购车报价记录_${date}.json`, JSON.stringify(payload, null, 2), 'application/json;charset=utf-8');
+}
+
+function escapeCSVCell(value) {
+  const text = String(value ?? '');
+  return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
+function exportRecordsCSV() {
+  const records = getRecords();
+  if (!records.length) { showModal('暂无记录', '<p>当前没有可导出的报价记录。</p>'); return; }
+  const headers = ['保存时间','4S店','车型','购车方式','指导价','开票价','提车/首期垫付','实际/贷款总成本','国补','其他补贴','赠品估值','等效支出','月供','期数','备注'];
+  const rows = records.map(r => [
+    r.savedAt || '',
+    r.dealership || '',
+    r.model || '',
+    r.paymentMethod === 'loan' ? '贷款' : '全款',
+    fmt(r.guidePrice || 0),
+    fmt(r.invoicePrice || 0),
+    fmt(r.payNow || 0),
+    fmt(r.finalCost || 0),
+    fmt(r.nationalSubsidy || 0),
+    fmt(r.otherSubsidy || 0),
+    fmt(r.giftValue || 0),
+    fmt((r.finalCost || 0) - (r.giftValue || 0)),
+    r.loanInfo ? fmt(r.loanInfo.monthlyPayment || 0) : '',
+    r.loanInfo ? r.loanInfo.loanMonths : '',
+    r.note || ''
+  ]);
+  const csv = [headers, ...rows].map(row => row.map(escapeCSVCell).join(',')).join('\r\n');
+  const date = new Date().toISOString().slice(0, 10);
+  downloadTextFile(`购车报价记录_${date}.csv`, '\ufeff' + csv, 'text/csv;charset=utf-8');
+}
+
+function normalizeImportedRecord(item, index) {
+  if (!item || typeof item !== 'object') return null;
+  const numericKeys = ['guidePrice','vatRate','mfrSubsidy','extraExpense','otherSubsidy','giftValue','invoicePrice','exTaxPrice','tax','nationalSubsidy','payNow','finalCost','totalSavings','taxSaving','financeFee'];
+  const mustHave = ['guidePrice','invoicePrice','payNow','finalCost'];
+  if (!mustHave.every(key => Number.isFinite(Number(item[key])))) return null;
+  const record = { ...item };
+  numericKeys.forEach(key => { record[key] = Number(record[key] || 0); });
+  record.id = Number(record.id) || (Date.now() + index);
+  record.dealership = String(record.dealership || '导入记录');
+  record.model = String(record.model || '');
+  record.note = String(record.note || '');
+  record.savedAt = String(record.savedAt || new Date().toLocaleString('zh-CN'));
+  record.paymentMethod = record.paymentMethod === 'loan' ? 'loan' : 'full';
+  record.carType = record.carType === 'nev' ? 'nev' : 'fuel';
+  record.tradeIn = ['none','scrap','swap'].includes(record.tradeIn) ? record.tradeIn : 'none';
+  record.expDetails = Array.isArray(record.expDetails) ? record.expDetails : [];
+  record.subDetails = Array.isArray(record.subDetails) ? record.subDetails : [];
+  record.giftDetails = Array.isArray(record.giftDetails) ? record.giftDetails : [];
+  record.mfrDetails = Array.isArray(record.mfrDetails) ? record.mfrDetails : [];
+  record.processText = String(record.processText || '导入记录未包含完整计算过程。');
+  if (record.paymentMethod === 'loan' && record.loanInfo && typeof record.loanInfo === 'object') {
+    record.loanInfo = {
+      downPaymentRatio: Number(record.loanInfo.downPaymentRatio || 0),
+      downPayment: Number(record.loanInfo.downPayment || 0),
+      loanPrincipal: Number(record.loanInfo.loanPrincipal || 0),
+      loanMonths: Number(record.loanInfo.loanMonths || 0),
+      annualRate: Number(record.loanInfo.annualRate || 0),
+      monthlyPayment: Number(record.loanInfo.monthlyPayment || 0),
+      totalRepayment: Number(record.loanInfo.totalRepayment || 0),
+      totalInterest: Number(record.loanInfo.totalInterest || 0),
+      financeFee: Number(record.loanInfo.financeFee || 0)
+    };
+  } else {
+    record.loanInfo = null;
+  }
+  return record;
+}
+
+function importRecords() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'application/json,.json';
+  input.onchange = function() {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function() {
+      try {
+        const raw = JSON.parse(reader.result);
+        const imported = Array.isArray(raw) ? raw : (Array.isArray(raw.records) ? raw.records : []);
+        if (!imported.length) throw new Error('empty');
+        const existing = getRecords();
+        const existingIds = new Set(existing.map(r => Number(r.id)));
+        const normalized = imported
+          .map((item, idx) => normalizeImportedRecord(item, idx))
+          .filter(Boolean)
+          .map((record, idx) => {
+            while (existingIds.has(Number(record.id))) record.id = Date.now() + idx + Math.floor(Math.random() * 1000);
+            existingIds.add(Number(record.id));
+            return record;
+          });
+        if (!normalized.length) throw new Error('invalid');
+        saveRecords(existing.concat(normalized));
+        updateBadge();
+        renderRecords();
+        showModal('✅ 导入完成', `<p>已导入 ${normalized.length} 条报价记录。若原文件中包含重复 ID，已自动生成新的本地 ID。</p>`);
+      } catch {
+        showModal('导入失败', '<p>请选择由本项目导出的 JSON 文件，或检查文件是否为有效报价记录数组。</p>');
+      }
+    };
+    reader.readAsText(file, 'utf-8');
+  };
+  input.click();
 }
 
 function deleteRecord(id) {
@@ -1130,6 +1521,9 @@ function renderRecords() {
       ? (r.nevType === 'bev' ? '🔋纯电' : r.nevType === 'phev' ? '🔄插混/增程' : '💧燃料电池')
       : (r.displacement === 'le2' ? '⛽燃油≤2L' : '⛽燃油>2L');
     const tradeLabel = r.tradeIn === 'none' ? '' : r.tradeIn === 'scrap' ? '报废更新' : '置换更新';
+    const paymentLabel = r.paymentMethod === 'loan' ? '贷款' : '全款';
+    const payLabel = r.paymentMethod === 'loan' ? '首期垫付' : '提车垫付';
+    const finalLabel = r.paymentMethod === 'loan' ? '贷款总成本' : '实际支出';
     const isBestFinal = r.finalCost === minFinal;
     const netVal = r.giftValue > 0 ? r.finalCost - r.giftValue : r.finalCost;
     const isBestNet = netVal === minNet && records.length > 1;
@@ -1147,14 +1541,16 @@ function renderRecords() {
         </div>
         <div class="rc-tags">
           <span class="rc-tag ${r.carType === 'nev' ? 'nev' : 'fuel'}">${carLabel}</span>
+          <span class="rc-tag ${r.paymentMethod === 'loan' ? 'loan' : 'trade'}">${paymentLabel}</span>
           ${tradeLabel ? `<span class="rc-tag trade">${tradeLabel}</span>` : ''}
           ${r.nationalSubsidy > 0 ? `<span class="rc-tag trade">国补${fmt(r.nationalSubsidy)}元</span>` : ''}
+          ${r.loanInfo ? `<span class="rc-tag loan">月供${fmt(r.loanInfo.monthlyPayment || 0)}元</span>` : ''}
         </div>
         <div class="rc-prices">
           <div class="rc-price-item"><div class="label">指导价</div><div class="val" style="color:var(--text-dim);font-size:13px">${fmt(r.guidePrice)}</div></div>
           <div class="rc-price-item"><div class="label">开票价</div><div class="val" style="color:var(--text-dim);font-size:13px">${fmt(r.invoicePrice)}</div></div>
-          <div class="rc-price-item pay"><div class="label">提车垫付</div><div class="val">${fmt(r.payNow)}</div></div>
-          <div class="rc-price-item final"><div class="label">实际支出</div><div class="val">${fmt(r.finalCost)}</div></div>
+          <div class="rc-price-item pay"><div class="label">${payLabel}</div><div class="val">${fmt(r.payNow)}</div></div>
+          <div class="rc-price-item final"><div class="label">${finalLabel}</div><div class="val">${fmt(r.finalCost)}</div></div>
           ${r.giftValue > 0 ? `<div class="rc-price-item gift"><div class="label">赠品价值</div><div class="val">${fmt(r.giftValue)}</div></div>` : ''}
           ${r.giftValue > 0 ? `<div class="rc-price-item net"><div class="label">等效支出 ${isBestNet && records.length>1 ? '🏆' : ''}</div><div class="val">${fmt(netVal)}</div></div>` : ''}
         </div>
@@ -1206,13 +1602,23 @@ function showDetail(id) {
     ['不含税价', fmt(r.exTaxPrice) + ' 元'],
     ['购置税', fmt(r.tax) + ' 元（' + r.taxNote + '）'],
     ['其他费用', fmt(r.extraExpense) + ' 元' + (r.expDetails.length ? '（' + r.expDetails.map(d=>d.name).join('、') + '）' : '')],
+    ['购车方式', r.paymentMethod === 'loan' ? '贷款购车' : '全款购车'],
     ['---', ''],
-    ['提车时需支付', fmt(r.payNow) + ' 元'],
+    [r.paymentMethod === 'loan' ? '首期需垫付' : '提车时需支付', fmt(r.payNow) + ' 元'],
     ['以旧换新国补', fmt(r.nationalSubsidy) + ' 元'],
     ['其他补贴', fmt(r.otherSubsidy) + ' 元'],
     ['---', ''],
-    ['实际总支出', fmt(r.finalCost) + ' 元'],
+    [r.paymentMethod === 'loan' ? '贷款真实总成本' : '实际总支出', fmt(r.finalCost) + ' 元'],
   ];
+  if (r.loanInfo) {
+    rows.splice(8, 0,
+      ['首付金额', fmt(r.loanInfo.downPayment) + ' 元（' + fmt(r.loanInfo.downPaymentRatio) + '%）'],
+      ['贷款本金', fmt(r.loanInfo.loanPrincipal) + ' 元'],
+      ['月供', fmt(r.loanInfo.monthlyPayment) + ' 元 × ' + r.loanInfo.loanMonths + '期'],
+      ['总利息', fmt(r.loanInfo.totalInterest) + ' 元'],
+      ['金融服务费', fmt(r.loanInfo.financeFee) + ' 元']
+    );
+  }
   if (r.giftValue > 0) {
     rows.push(['4S店赠品价值', fmt(r.giftValue) + ' 元（' + r.giftDetails.map(d=>d.name).join('、') + '）']);
     rows.push(['综合等效支出', fmt(r.finalCost - r.giftValue) + ' 元']);
@@ -1261,6 +1667,9 @@ document.getElementById('confirmModal').addEventListener('click', function(e) { 
 /* ==========================================================
    初始化
 ========================================================== */
+document.getElementById('oldCarDate').max = POLICY.tradeIn.ownershipCutoff;
+document.getElementById('vatRate').value = POLICY.vat.defaultRate;
+document.getElementById('ownershipCutoffText').textContent = new Date(POLICY.tradeIn.ownershipCutoff).toLocaleDateString('zh-CN') + '前';
 updateBadge();
 </script>
 
