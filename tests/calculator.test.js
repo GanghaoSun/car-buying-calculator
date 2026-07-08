@@ -1,22 +1,8 @@
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 
-const POLICY = {
-  vat: { defaultRate: 13 },
-  purchaseTax: {
-    rate: 0.10,
-    nevDiscount: { rate: 0.05, cap: 15000 }
-  },
-  tradeIn: {
-    scrap: {
-      nev: { rate: 0.12, cap: 20000 },
-      fuelLe2: { rate: 0.10, cap: 15000 }
-    },
-    swap: {
-      nev: { rate: 0.08, cap: 15000 },
-      fuelLe2: { rate: 0.06, cap: 13000 }
-    }
-  }
-};
+const POLICY = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'policy.json'), 'utf8'));
 
 function nearlyEqual(actual, expected, epsilon = 0.01) {
   assert.ok(Math.abs(actual - expected) <= epsilon, `expected ${actual} to be close to ${expected}`);
@@ -68,7 +54,32 @@ function loanQuote({ invoicePrice, tax, extraExpense, otherSubsidy, nationalSubs
   return { downPayment, downPaymentRatio: resolved.downPaymentRatio, principal, monthlyPayment, totalRepayment, totalInterest, payNow, finalCost };
 }
 
+function expenseQuote({ invoicePrice, tax, insuranceExpense, otherExpense, nationalSubsidy, otherSubsidy }) {
+  const extraExpense = insuranceExpense + otherExpense;
+  const payNow = invoicePrice + tax + extraExpense;
+  const finalCost = payNow - nationalSubsidy - otherSubsidy;
+  return { extraExpense, payNow, finalCost };
+}
+
+function riskAlerts({ invoicePrice, insuranceExpense, otherExpense, otherSubsidy, giftValue, carType, tradeIn, nationalSubsidy, loanInfo }) {
+  const alerts = [];
+  const loanExtra = loanInfo ? loanInfo.totalInterest + loanInfo.financeFee : 0;
+  if (insuranceExpense <= 0) alerts.push('保险费用可能漏填');
+  if (invoicePrice > 0 && insuranceExpense / invoicePrice > 0.08) alerts.push('保险费用占比较高');
+  if (invoicePrice > 0 && otherExpense / invoicePrice > 0.05) alerts.push('其他费用占比较高');
+  if (loanInfo && invoicePrice > 0 && loanExtra / invoicePrice > 0.08) alerts.push('贷款附加成本较高');
+  if (otherSubsidy > 0) alerts.push('后返补贴需确认到账条件');
+  if (giftValue > 0) alerts.push('赠品估值不等于现金优惠');
+  if (carType === 'nev') alerts.push('新能源资格需按官方目录核验');
+  if (tradeIn !== 'none' && nationalSubsidy > 0) alerts.push('以旧换新补贴已计入');
+  return alerts;
+}
+
 function run() {
+  assert.equal(POLICY.version, '2026-2027-public-estimate');
+  assert.equal(POLICY.vat.defaultRate, 13);
+  assert.equal(POLICY.purchaseTax.nevDiscount.cap, 15000);
+
   const fuel = purchaseTax(113000, 13, 'fuel');
   nearlyEqual(fuel.exTaxPrice, 100000);
   nearlyEqual(fuel.tax, 10000);
@@ -123,6 +134,34 @@ function run() {
   nearlyEqual(amountModeLoan.downPayment, 80000);
   nearlyEqual(amountModeLoan.downPaymentRatio, 40);
   nearlyEqual(amountModeLoan.principal, 120000);
+
+  const expense = expenseQuote({
+    invoicePrice: 200000,
+    tax: 10000,
+    insuranceExpense: 6500,
+    otherExpense: 1500,
+    nationalSubsidy: 12000,
+    otherSubsidy: 3000
+  });
+  nearlyEqual(expense.extraExpense, 8000);
+  nearlyEqual(expense.payNow, 218000);
+  nearlyEqual(expense.finalCost, 203000);
+
+  const risks = riskAlerts({
+    invoicePrice: 200000,
+    insuranceExpense: 0,
+    otherExpense: 12000,
+    otherSubsidy: 3000,
+    giftValue: 2000,
+    carType: 'nev',
+    tradeIn: 'scrap',
+    nationalSubsidy: 12000,
+    loanInfo: { totalInterest: 15000, financeFee: 3000 }
+  });
+  assert.ok(risks.includes('保险费用可能漏填'));
+  assert.ok(risks.includes('其他费用占比较高'));
+  assert.ok(risks.includes('贷款附加成本较高'));
+  assert.ok(risks.includes('新能源资格需按官方目录核验'));
 
   console.log('calculator tests passed');
 }

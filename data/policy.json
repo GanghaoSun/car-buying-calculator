@@ -1,0 +1,69 @@
+{
+  "version": "2026-2027-public-estimate",
+  "updatedAt": "2026-07-08",
+  "scope": "全国通用估算参数，仅用于购车费用核算演示；地方补贴、车型目录和年度细则需以官方公告及当地执行口径为准。",
+  "sources": [
+    {
+      "name": "财政部",
+      "url": "https://www.mof.gov.cn/"
+    },
+    {
+      "name": "国家税务总局",
+      "url": "https://www.chinatax.gov.cn/"
+    },
+    {
+      "name": "工业和信息化部",
+      "url": "https://www.miit.gov.cn/"
+    },
+    {
+      "name": "商务部",
+      "url": "https://www.mofcom.gov.cn/"
+    },
+    {
+      "name": "国家发展改革委",
+      "url": "https://www.ndrc.gov.cn/"
+    }
+  ],
+  "vat": {
+    "defaultRate": 13
+  },
+  "purchaseTax": {
+    "rate": 0.1,
+    "nevDiscount": {
+      "rate": 0.05,
+      "cap": 15000
+    }
+  },
+  "tradeIn": {
+    "ownershipCutoff": "2025-01-08",
+    "oldCarDeadline": {
+      "gas": "2013-06-30",
+      "diesel": "2015-06-30",
+      "nev": "2019-12-31"
+    },
+    "scrap": {
+      "nev": {
+        "rate": 0.12,
+        "cap": 20000,
+        "label": "报废+新能源"
+      },
+      "fuelLe2": {
+        "rate": 0.1,
+        "cap": 15000,
+        "label": "报废+燃油(≤2L)"
+      }
+    },
+    "swap": {
+      "nev": {
+        "rate": 0.08,
+        "cap": 15000,
+        "label": "置换+新能源"
+      },
+      "fuelLe2": {
+        "rate": 0.06,
+        "cap": 13000,
+        "label": "置换+燃油(≤2L)"
+      }
+    }
+  }
+}
