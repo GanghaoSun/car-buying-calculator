@@ -1,6 +1,6 @@
 {
   "name": "car-buying-calculator",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "private": true,
   "description": "购车落地价计算器：拆解购置税、补贴、优惠、赠品和多店报价。",
   "scripts": {
