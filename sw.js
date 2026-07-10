@@ -1,6 +1,6 @@
 // 购车比价计算器 - Service Worker
 // 版本号：每次更新文件时修改此处
-const CACHE_NAME = 'car-calc-v6';
+const CACHE_NAME = 'car-calc-v7';
 
 // 需要缓存的文件列表
 const FILES_TO_CACHE = [
@@ -18,7 +18,10 @@ self.addEventListener('install', event => {
       return cache.addAll(FILES_TO_CACHE);
     })
   );
-  self.skipWaiting();
+});
+
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
 // 激活：清理旧缓存
@@ -36,6 +39,16 @@ self.addEventListener('activate', event => {
 // 拦截请求：政策配置网络优先，其余静态资源优先返回缓存
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).then(response => {
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put('./index.html', copy));
+        return response;
+      }).catch(() => caches.match('./index.html'))
+    );
+    return;
+  }
   if (url.pathname.endsWith('/data/policy.json')) {
     event.respondWith(
       fetch(event.request).then(response => {

@@ -1,33 +1,17 @@
 {
-  "id": "national-2026-2027",
-  "name": "全国通用估算参数",
-  "version": "2026-2027-public-estimate",
-  "updatedAt": "2026-07-08",
+  "id": "city-example-2026",
+  "name": "城市政策包示例（请勿直接作为真实政策使用）",
+  "version": "city-example-1.0.0",
+  "updatedAt": "2026-07-10",
   "effectiveFrom": "2026-01-01",
-  "effectiveTo": "2027-12-31",
-  "lastVerifiedAt": "2026-07-08",
-  "region": "全国通用",
-  "scope": "全国通用估算参数，仅用于购车费用核算演示；地方补贴、车型目录和年度细则需以官方公告及当地执行口径为准。",
+  "effectiveTo": "2026-12-31",
+  "lastVerifiedAt": "2026-07-10",
+  "region": "示例城市",
+  "scope": "这是政策包字段模板，不包含任何真实地方补贴金额。请按官方公告填写适用范围、金额、条件和来源后再导入。",
   "sources": [
     {
-      "name": "财政部",
-      "url": "https://www.mof.gov.cn/"
-    },
-    {
-      "name": "国家税务总局",
-      "url": "https://www.chinatax.gov.cn/"
-    },
-    {
-      "name": "工业和信息化部",
-      "url": "https://www.miit.gov.cn/"
-    },
-    {
-      "name": "商务部",
-      "url": "https://www.mofcom.gov.cn/"
-    },
-    {
-      "name": "国家发展改革委",
-      "url": "https://www.ndrc.gov.cn/"
+      "name": "地方主管部门官方公告",
+      "url": "https://example.gov.cn/"
     }
   ],
   "vat": {

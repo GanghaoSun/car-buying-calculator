@@ -153,7 +153,8 @@ input::placeholder{color:var(--text-dimmer)}
 /* ===== PAGE 2: RESULT CARD ===== */
 .result-summary{background:linear-gradient(135deg,var(--surface2),var(--surface3));border:1px solid var(--border-light);border-radius:var(--radius);padding:28px;margin-bottom:20px;position:relative;overflow:hidden}
 .result-summary::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent3))}
-.summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+@media(max-width:760px){.summary-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:560px){.summary-grid{grid-template-columns:1fr 1fr}}
 .summary-item{text-align:center}
 .summary-item .s-label{font-size:var(--fs-sm);text-transform:uppercase;letter-spacing:.8px;color:var(--text-dimmer);margin-bottom:6px}
@@ -291,6 +292,35 @@ input::placeholder{color:var(--text-dimmer)}
 .stacking-note{background:rgba(255,215,0,.06);border:1px solid rgba(255,215,0,.2);border-radius:var(--radius-sm);padding:14px;margin-top:16px;font-size:var(--fs-sm);color:var(--text-dim);line-height:1.8}
 .stacking-note strong{color:var(--accent4)}
 
+/* ===== v1.6 报价口径、政策与长期成本 ===== */
+.dyn-row.subsidy-row{align-items:stretch;flex-wrap:wrap}
+.subsidy-row .row-name{min-width:120px}
+.subsidy-meta{display:grid;grid-template-columns:minmax(112px,.8fr) minmax(120px,1fr);gap:7px;width:100%;padding-top:7px;border-top:1px dashed var(--border)}
+.subsidy-meta select,.subsidy-meta input{font-size:var(--fs-sm);padding:8px 10px;background:var(--surface3)}
+.policy-meta{font-size:var(--fs-sm);color:var(--text-dim);line-height:1.8;margin-top:2px}
+.policy-state{display:inline-flex;align-items:center;gap:6px;font-size:var(--fs-sm);padding:5px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-dim);background:var(--surface2);margin-top:12px}
+.policy-state.valid{border-color:rgba(0,230,118,.35);color:var(--success);background:rgba(0,230,118,.07)}
+.policy-state.expired,.policy-state.future{border-color:rgba(255,171,64,.4);color:var(--warn);background:rgba(255,171,64,.08)}
+.policy-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.ownership-hint{font-size:var(--fs-sm);color:var(--text-dimmer);line-height:1.7;margin-top:2px}
+.cost-layer-note{font-size:var(--fs-xs);color:var(--text-dimmer);margin-top:3px;line-height:1.55}
+.table-scroll{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius-sm)}
+.compare-table{width:100%;border-collapse:collapse;min-width:720px;font-size:var(--fs-sm)}
+.compare-table th,.compare-table td{padding:11px 12px;border-bottom:1px solid var(--border);text-align:right;white-space:nowrap}
+.compare-table th:first-child,.compare-table td:first-child{text-align:left;color:var(--text-dim)}
+.compare-table th{color:var(--text);background:var(--surface2);font-weight:600}
+.compare-table tr:last-child td{border-bottom:none}
+.compare-table .best{color:var(--accent2);font-family:'JetBrains Mono',monospace;font-weight:700}
+.compare-table .warn{color:var(--warn)}
+.schedule-details{margin-top:14px;border-top:1px dashed var(--border);padding-top:12px}
+.schedule-details summary{cursor:pointer;color:var(--accent);font-size:var(--fs-sm)}
+.schedule-details .table-scroll{margin-top:12px}
+.compare-select-active{border-color:var(--accent)!important;background:rgba(0,212,255,.16)!important}
+.compare-help{font-size:var(--fs-sm);color:var(--text-dimmer);line-height:1.7;margin-bottom:12px}
+.update-banner{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:3000;display:none;align-items:center;gap:10px;max-width:calc(100vw - 32px);padding:12px 14px;background:var(--surface);border:1px solid var(--accent);border-radius:var(--radius-sm);box-shadow:0 12px 40px rgba(0,0,0,.35);font-size:var(--fs-sm)}
+.update-banner.show{display:flex}
+.update-banner button{padding:7px 11px;font-size:var(--fs-sm)}
+
 /* ===== PROCESS TEXT ===== */
 #processText{font-family:'JetBrains Mono',monospace;font-size:var(--fs-xs);color:var(--text-dim);line-height:2.1;white-space:pre-wrap}
 
@@ -313,6 +343,8 @@ footer a:hover{color:var(--accent)}
   .chart-row{grid-template-columns:1fr;gap:6px}
   .chart-value{text-align:left}
   .chart-total{flex-direction:column;gap:4px}
+  .subsidy-meta{grid-template-columns:1fr}
+  .update-banner{width:calc(100vw - 28px);justify-content:space-between}
 }
 </style>
 </head>
@@ -395,14 +427,19 @@ footer a:hover{color:var(--accent)}
   </div>
 </div>
 
+<div class="update-banner" id="updateBanner" role="status" aria-live="polite">
+  <span>发现新版本，刷新后即可使用最新功能。</span>
+  <button class="btn-sec" type="button" onclick="applyAppUpdate()">刷新更新</button>
+</div>
+
 <!-- ======================================================
      PAGE 1: 数据录入
 ====================================================== -->
 <div class="page active" id="page1">
   <div class="page-header">
-    <div class="header-badge">2026年政策 · 实时计算</div>
+    <div class="header-badge">2026-2027 参数 · 本地核算</div>
     <h1>购车费用全维度计算器</h1>
-    <p class="page-subtitle">覆盖购置税减免 · 保险拆分 · 以旧换新国补 · 贷款成本 · 多店比价</p>
+    <p class="page-subtitle">覆盖购置税减免 · 补贴确认分层 · 贷款方案 · 长期持有成本 · 多店比价</p>
   </div>
 
   <!-- ① 基础价格 -->
@@ -427,6 +464,17 @@ footer a:hover{color:var(--accent)}
         </div>
       </div>
     </div>
+  </div>
+
+  <div class="section-card s1" id="policyConfigCard">
+    <div class="section-title"><div class="section-icon">📜</div>政策配置状态</div>
+    <div class="policy-meta" id="policyMeta">正在读取全国通用估算参数…</div>
+    <div class="policy-state" id="policyState">⏳ 正在核验配置有效期</div>
+    <div class="policy-actions">
+      <button class="btn-sec" type="button" onclick="importPolicyProfile()">⬆ 导入城市政策包</button>
+      <button class="btn-ghost" type="button" onclick="resetPolicyProfile()">恢复全国参数</button>
+    </div>
+    <div class="ownership-hint">仅导入附有名称、版本、有效期和官方来源的 JSON 政策包。未核验的地方规则不会自动写入本工具。</div>
   </div>
 
   <!-- ② 付款方式 -->
@@ -481,14 +529,39 @@ footer a:hover{color:var(--accent)}
             </div>
           </div>
           <div class="form-group">
+            <label>还款方式<span class="required">*</span></label>
+            <div class="radio-group">
+              <div class="radio-option"><input type="radio" name="repaymentMethod" id="repayEqualPayment" value="equal-payment" checked><label for="repayEqualPayment">等额本息</label></div>
+              <div class="radio-option"><input type="radio" name="repaymentMethod" id="repayEqualPrincipal" value="equal-principal"><label for="repayEqualPrincipal">等额本金</label></div>
+            </div>
+          </div>
+          <div class="form-group">
             <label>金融服务费 <span class="hint">（如无则填0）</span></label>
             <div class="input-suffix">
               <input type="number" id="financeFee" value="0" min="0" step="0.01">
               <span class="suffix-text">元</span>
             </div>
           </div>
+          <div class="form-group">
+            <label>提前结清期数 <span class="hint">（可选）</span></label>
+            <div class="input-suffix">
+              <input type="number" id="earlySettlementMonth" min="0" step="1" placeholder="如：12">
+              <span class="suffix-text">期后</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>提前结清违约金比例 <span class="hint">（可选）</span></label>
+            <div class="input-suffix">
+              <input type="number" id="earlySettlementPenaltyRate" value="0" min="0" max="100" step="0.01">
+              <span class="suffix-text">%</span>
+            </div>
+          </div>
         </div>
-        <div class="alert alert-info"><span class="alert-icon">ℹ️</span><div>贷款按等额本息估算，真实审批利率、贴息、抵押/GPS/解押等费用以金融合同为准。金融服务费会计入首期垫付和贷款真实总成本。</div></div>
+        <div class="section-title" style="font-size:var(--fs-base);margin:2px 0 0"><div class="section-icon" style="width:26px;height:26px;font-size:14px">🧾</div>金融附加费用 <div class="section-title-spacer"></div><button class="btn-add-inline expense" type="button" onclick="addLoanFeeRow()">＋ 添加费用</button></div>
+        <div id="loanFeeRows" class="dyn-rows">
+          <div class="dyn-row"><input type="text" class="row-name" value="GPS/抵押/解押等" placeholder="金融费用名称"><div class="dyn-divider"></div><div class="amt-wrap"><input type="number" class="loan-fee-amt" min="0" step="0.01" placeholder="0" oninput="recalcTotals()"><span class="unit">元</span></div><button class="btn-remove-row" onclick="removeRow(this,'loanFeeRows')">×</button></div>
+        </div>
+        <div class="alert alert-info"><span class="alert-icon">ℹ️</span><div>页面会同时计算等额本息、等额本金和全款方案；提前结清按所填期数后的剩余本金与违约金估算。真实审批利率、贴息和附加费用以金融合同为准。</div></div>
       </div>
     </div>
   </div>
@@ -632,10 +705,10 @@ footer a:hover{color:var(--accent)}
         <button class="btn-add-inline" onclick="addSubsidyRow()">＋ 添加补贴</button>
       </div>
       <div id="subsidyRows" class="dyn-rows">
-        <div class="dyn-row"><input type="text" class="row-name" value="市级补贴" placeholder="补贴名称"><div class="dyn-divider"></div><div class="amt-wrap"><input type="number" class="sub-amt" min="0" step="0.01" placeholder="3000" oninput="recalcTotals()"><span class="unit">元</span></div><button class="btn-remove-row" onclick="removeRow(this,'subsidyRows')">×</button></div>
+        <div class="dyn-row subsidy-row"><input type="text" class="row-name" value="市级补贴" placeholder="补贴名称"><div class="dyn-divider"></div><div class="amt-wrap"><input type="number" class="sub-amt" min="0" step="0.01" placeholder="3000" oninput="recalcTotals()"><span class="unit">元</span></div><button class="btn-remove-row" onclick="removeRow(this,'subsidyRows')">×</button><div class="subsidy-meta"><select class="sub-status" aria-label="补贴确认状态"><option value="conditional" selected>待申请/有条件</option><option value="confirmed">已确认（合同/正式通知）</option><option value="oral">销售口头承诺</option></select><input type="text" class="sub-condition" placeholder="到账条件，如上牌地、申请期限"></div></div>
       </div>
       <div class="row-total"><span class="total-label">其他补贴合计</span><span class="total-val income" id="subsidyTotal">0.00 元</span></div>
-      <div class="alert alert-info" style="margin-top:10px;padding:10px 13px;font-size:13px"><span class="alert-icon" style="font-size:14px">🎁</span><div>通常<strong>提车后返还</strong>，需先垫付</div></div>
+      <div class="alert alert-info" style="margin-top:10px;padding:10px 13px;font-size:13px"><span class="alert-icon" style="font-size:14px">🎁</span><div>补贴默认视为<strong>待申请/有条件</strong>，只在“预计总支出”中扣除；写入合同或有正式通知后可标为已确认。</div></div>
     </div>
   </div>
 
@@ -651,6 +724,28 @@ footer a:hover{color:var(--accent)}
     </div>
     <div class="row-total"><span class="total-label">赠品总价值</span><span class="total-val gift-color" id="giftTotal">0.00 元</span></div>
     <div class="alert alert-gift" style="margin-top:10px;padding:10px 13px;font-size:13px"><span class="alert-icon" style="font-size:14px">🎀</span><div>赠品价值<strong>不计入实际支出</strong>，用于横向对比综合性价比</div></div>
+  </div>
+
+  <div class="section-card s1">
+    <div class="section-title"><div class="section-icon">🛣️</div>长期持有成本 <span class="hint">（可选）</span></div>
+    <div class="form-group" style="margin-bottom:16px">
+      <label>是否测算持有成本</label>
+      <div class="radio-group">
+        <div class="radio-option"><input type="radio" name="ownershipEnabled" id="ownershipOff" value="off" onchange="onOwnershipChange()" checked><label for="ownershipOff">仅计算购车</label></div>
+        <div class="radio-option"><input type="radio" name="ownershipEnabled" id="ownership3" value="3" onchange="onOwnershipChange()"><label for="ownership3">3 年持有</label></div>
+        <div class="radio-option"><input type="radio" name="ownershipEnabled" id="ownership5" value="5" onchange="onOwnershipChange()"><label for="ownership5">5 年持有</label></div>
+      </div>
+    </div>
+    <div class="conditional" id="ownershipFields"><div class="conditional-inner">
+      <div class="form-grid">
+        <div class="form-group"><label>年行驶里程</label><div class="input-suffix"><input type="number" id="annualMileage" min="0" step="1000" placeholder="如：15000"><span class="suffix-text">km</span></div></div>
+        <div class="form-group"><label>每百公里能源成本</label><div class="input-suffix"><input type="number" id="energyCostPer100km" min="0" step="0.01" placeholder="如：65"><span class="suffix-text">元</span></div></div>
+        <div class="form-group"><label>年度续保费用</label><div class="input-suffix"><input type="number" id="annualInsurance" min="0" step="0.01" placeholder="如：5000"><span class="suffix-text">元</span></div></div>
+        <div class="form-group"><label>年度保养费用</label><div class="input-suffix"><input type="number" id="annualMaintenance" min="0" step="0.01" placeholder="如：1500"><span class="suffix-text">元</span></div></div>
+        <div class="form-group"><label>期末预计残值比例</label><div class="input-suffix"><input type="number" id="residualRate" min="0" max="100" step="0.1" placeholder="如：45"><span class="suffix-text">%</span></div></div>
+      </div>
+      <div class="ownership-hint">首年保险已在购车费用中计入；本模块从第 2 年起计入续保，并扣除按开票价估算的期末残值。能源、保养和残值仅用于个人预算比较。</div>
+    </div></div>
   </div>
 
   <!-- 计算按钮 -->
@@ -680,11 +775,12 @@ footer a:hover{color:var(--accent)}
     <p class="page-subtitle" id="p2Subtitle">基于您填写的数据计算</p>
   </div>
 
-  <!-- 三格摘要 -->
+  <!-- 四格摘要 -->
   <div class="result-summary">
     <div class="summary-grid">
       <div class="summary-item"><div class="s-label" id="sumPayLabel">提车时需垫付</div><div class="s-value s-pay" id="sumPay">—</div><div class="s-sub" id="sumPaySub">含购置税+其他费用</div></div>
-      <div class="summary-item"><div class="s-label" id="sumFinalLabel">实际总支出</div><div class="s-value s-final" id="sumFinal">—</div><div class="s-sub" id="sumFinalSub">扣除所有补贴后</div></div>
+      <div class="summary-item"><div class="s-label">确认口径总支出</div><div class="s-value s-final" id="sumConfirmed">—</div><div class="s-sub">仅扣已确认补贴</div></div>
+      <div class="summary-item"><div class="s-label" id="sumFinalLabel">预计总支出</div><div class="s-value s-final" id="sumFinal">—</div><div class="s-sub" id="sumFinalSub">含待申请补贴</div></div>
       <div class="summary-item"><div class="s-label">赠品总价值</div><div class="s-value s-gift" id="sumGift">—</div><div class="s-sub">不计入支出</div></div>
     </div>
     <div class="savings-badge">
@@ -740,6 +836,10 @@ footer a:hover{color:var(--accent)}
           <div class="result-label"><div class="dot" style="background:var(--warn)"></div><div><strong>总利息与金融服务费</strong><br><small style="color:var(--text-dimmer)">计入贷款真实总成本</small></div></div>
           <div class="result-value"><span class="amount" id="rLoanExtra">—</span><span class="note" id="rFinanceFeeNote"></span></div>
         </div>
+        <div class="result-row hl-green" id="rEarlySettlementRow" style="display:none">
+          <div class="result-label"><div class="dot" style="background:var(--accent2)"></div><div><strong>提前结清后预计总成本</strong><br><small id="rEarlySettlementNote" style="color:var(--text-dimmer)"></small></div></div>
+          <div class="result-value"><span class="amount" id="rEarlySettlementCost">—</span></div>
+        </div>
       </div>
       <div class="result-row hl-green">
         <div class="result-label"><div class="dot" style="background:var(--accent2)"></div><div><strong>以旧换新国补</strong></div></div>
@@ -751,8 +851,12 @@ footer a:hover{color:var(--accent)}
       </div>
       <div class="section-divider"></div>
       <div class="result-row hl-green">
-        <div class="result-label"><div class="dot" style="background:var(--accent2)"></div><div><strong id="rFinalLabel">实际总支出</strong><br><small id="rFinalNote" style="color:var(--text-dimmer)">提车垫付 − 国补 − 其他补贴</small></div></div>
-        <div class="result-value"><span class="amount" id="rFinal">—</span></div>
+        <div class="result-label"><div class="dot" style="background:var(--accent2)"></div><div><strong id="rConfirmedLabel">确认口径总支出</strong><br><small id="rConfirmedNote" style="color:var(--text-dimmer)">仅扣已确认补贴</small></div></div>
+        <div class="result-value"><span class="amount" id="rConfirmed">—</span></div>
+      </div>
+      <div class="result-row hl-green">
+        <div class="result-label"><div class="dot" style="background:var(--accent2)"></div><div><strong id="rFinalLabel">预计总支出</strong><br><small id="rFinalNote" style="color:var(--text-dimmer)">含待申请补贴</small></div></div>
+        <div class="result-value"><span class="amount" id="rFinal">—</span><span class="note" id="rExpectedLayerNote"></span></div>
       </div>
       <div id="rGiftRow" class="result-row" style="display:none;border-top:1px dashed var(--border);margin-top:4px">
         <div class="result-label"><div class="dot" style="background:var(--gift)"></div><div><strong style="color:var(--gift)">4S店赠品总价值</strong><br><small style="color:var(--text-dimmer)">不计入支出，仅供参比</small><div id="rGiftDetail" style="font-size:12px;color:var(--text-dimmer);margin-top:4px;line-height:1.7"></div></div></div>
@@ -771,6 +875,26 @@ footer a:hover{color:var(--accent)}
     <div class="chart-note">图表用于快速看清钱花在哪些项目上。补贴以抵扣项展示，赠品仅作为等效对比参考，不等同现金优惠。</div>
   </div>
 
+  <div class="result-card" id="loanCompareCard" style="display:none">
+    <div class="result-header"><span>🏦</span> 全款与贷款方案对比</div>
+    <div class="table-scroll"><table class="compare-table" id="loanCompareTable"></table></div>
+    <details class="schedule-details">
+      <summary>查看当前贷款方案的月度还款计划</summary>
+      <div class="table-scroll"><table class="compare-table" id="loanScheduleTable"></table></div>
+    </details>
+  </div>
+
+  <div class="result-card" id="ownershipCard" style="display:none">
+    <div class="result-header"><span>🛣️</span> 长期持有成本测算</div>
+    <div class="table-scroll"><table class="compare-table" id="ownershipTable"></table></div>
+    <div class="chart-note">长期成本采用“预计总支出”作为购车基数；能源、续保、保养和残值均为个人输入的预算参数，不代表官方报价或保值承诺。</div>
+  </div>
+
+  <div class="result-card">
+    <div class="result-header"><span>📜</span> 本次计算的政策配置</div>
+    <div class="policy-meta" id="resultPolicyMeta">—</div>
+  </div>
+
   <div class="result-card">
     <div class="result-header"><span>🧾</span> 报价风险提示</div>
     <div id="riskList" class="risk-list"></div>
@@ -783,6 +907,7 @@ footer a:hover{color:var(--accent)}
     <button class="btn-ghost" onclick="goPage(1)">← 返回修改</button>
     <button class="btn-sec" onclick="openProcessModal()">🧮 查看计算过程</button>
     <button class="btn-sec" onclick="shareResult()">📋 复制/分享摘要</button>
+    <button class="btn-sec" onclick="shareQuoteLink()">🔗 生成报价链接</button>
     <button class="btn-sec" onclick="exportReport()">📄 导出报价报告</button>
     <button class="btn-save" onclick="openSaveModal()">💾 保存报价记录</button>
   </div>
@@ -816,6 +941,12 @@ footer a:hover{color:var(--accent)}
     <div class="chart-note">按实际总支出或贷款真实总成本排序，赠品估值会显示为等效支出，方便快速发现“贵在哪一项”。</div>
   </div>
 
+  <div class="result-card" id="selectedCompareCard" style="display:none">
+    <div class="result-header"><span>🔎</span> 逐项报价对比</div>
+    <div class="compare-help" id="selectedCompareHelp"></div>
+    <div class="table-scroll"><table class="compare-table" id="selectedCompareTable"></table></div>
+  </div>
+
   <div id="recordsEmpty" class="records-empty">
     <div class="icon">📋</div>
     <p>暂无保存记录<br>计算完成后点击「保存报价记录」<br>即可在此处对比多家4S店</p>
@@ -826,15 +957,25 @@ footer a:hover{color:var(--accent)}
   <footer style="margin-top:40px"><p>记录保存在本地浏览器，清除浏览器数据会丢失。建议定期导出或截图备份。</p></footer>
 </div>
 
+<script src="./src/quote-engine.js"></script>
 <script>
 /* ==========================================================
    STATE
 ========================================================== */
 let lastCalcResult = null; // 最近一次计算结果，用于保存
+let selectedCompareIds = [];
+const STORAGE_KEY = 'car_calc_records_2026';
+const POLICY_OVERRIDE_KEY = 'car_calc_policy_override_2026';
 
 const DEFAULT_POLICY = {
+  id: 'national-2026-2027',
+  name: '全国通用估算参数',
   version: '2026-2027-public-estimate',
   updatedAt: '2026-07-08',
+  effectiveFrom: '2026-01-01',
+  effectiveTo: '2027-12-31',
+  lastVerifiedAt: '2026-07-08',
+  region: '全国通用',
   scope: '全国通用估算参数，仅用于购车费用核算演示；地方补贴、车型目录和年度细则需以官方公告及当地执行口径为准。',
   sources: [
     { name: '财政部', url: 'https://www.mof.gov.cn/' },
@@ -882,18 +1023,24 @@ function mergePolicy(base, incoming) {
 }
 
 async function loadExternalPolicy() {
-  if (location.protocol === 'file:') return false;
+  let externalPolicy = null;
   try {
-    const res = await fetch('./data/policy.json', { cache: 'no-store' });
-    if (!res.ok) throw new Error('policy json unavailable');
-    const externalPolicy = await res.json();
-    POLICY = mergePolicy(DEFAULT_POLICY, externalPolicy);
-    return true;
+    if (location.protocol !== 'file:') {
+      const res = await fetch('./data/policy.json', { cache: 'no-store' });
+      if (!res.ok) throw new Error('policy json unavailable');
+      externalPolicy = await res.json();
+    }
   } catch (err) {
     console.warn('Using built-in policy fallback:', err);
-    POLICY = JSON.parse(JSON.stringify(DEFAULT_POLICY));
-    return false;
   }
+  POLICY = mergePolicy(DEFAULT_POLICY, externalPolicy || {});
+  try {
+    const override = JSON.parse(localStorage.getItem(POLICY_OVERRIDE_KEY) || 'null');
+    if (override && CarCalcEngine.validatePolicyProfile(override).valid) POLICY = mergePolicy(POLICY, override);
+  } catch (err) {
+    console.warn('Ignoring invalid local policy override:', err);
+  }
+  return Boolean(externalPolicy);
 }
 
 function applyPolicyToForm() {
@@ -901,6 +1048,52 @@ function applyPolicyToForm() {
   const vatInput = document.getElementById('vatRate');
   if (!vatInput.dataset.touched) vatInput.value = POLICY.vat.defaultRate;
   document.getElementById('ownershipCutoffText').textContent = new Date(POLICY.tradeIn.ownershipCutoff).toLocaleDateString('zh-CN') + '前';
+  renderPolicyMeta();
+}
+
+function renderPolicyMeta() {
+  const status = CarCalcEngine.policyStatus(POLICY);
+  const meta = document.getElementById('policyMeta');
+  const state = document.getElementById('policyState');
+  if (!meta || !state) return;
+  const source = localStorage.getItem(POLICY_OVERRIDE_KEY) ? '本地导入政策包' : '内置/线上全国参数';
+  meta.textContent = `${POLICY.name || '全国通用估算参数'} · ${POLICY.region || '全国通用'} · 版本 ${POLICY.version || '未标注'} · 有效期 ${POLICY.effectiveFrom || '未标注'} 至 ${POLICY.effectiveTo || '未标注'} · ${source}`;
+  state.className = 'policy-state ' + status.level;
+  state.textContent = (status.level === 'valid' ? '✅ ' : '⚠️ ') + status.message;
+}
+
+function importPolicyProfile() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'application/json,.json';
+  input.onchange = function () {
+    const file = input.files && input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function () {
+      try {
+        const profile = JSON.parse(reader.result);
+        const validation = CarCalcEngine.validatePolicyProfile(profile);
+        if (!validation.valid) throw new Error(validation.message);
+        localStorage.setItem(POLICY_OVERRIDE_KEY, JSON.stringify(profile));
+        POLICY = mergePolicy(DEFAULT_POLICY, profile);
+        applyPolicyToForm();
+        showModal('✅ 政策包已导入', `<p>已启用「${escapeHTML(POLICY.name)}」。请在计算前核对其适用地区、有效期和官方来源。</p>`);
+      } catch (err) {
+        showModal('导入失败', `<p>${escapeHTML(err.message || '请选择符合模板的政策 JSON 文件。')}</p>`);
+      }
+    };
+    reader.readAsText(file, 'utf-8');
+  };
+  input.click();
+}
+
+function resetPolicyProfile() {
+  localStorage.removeItem(POLICY_OVERRIDE_KEY);
+  loadExternalPolicy().then(function () {
+    applyPolicyToForm();
+    showModal('已恢复全国参数', '<p>已移除本地导入的政策包，页面将使用仓库中的全国通用估算参数。</p>');
+  });
 }
 
 /* ==========================================================
@@ -955,11 +1148,19 @@ function makeRow(nameVal, amtCls, placeholder, containerId) {
   return d;
 }
 
+function makeSubsidyRow(nameVal) {
+  const d = document.createElement('div');
+  d.className = 'dyn-row subsidy-row';
+  d.innerHTML = `<input type="text" class="row-name" value="${nameVal || ''}" placeholder="补贴名称"><div class="dyn-divider"></div><div class="amt-wrap"><input type="number" class="sub-amt" min="0" step="0.01" placeholder="0" oninput="recalcTotals()"><span class="unit">元</span></div><button class="btn-remove-row" onclick="removeRow(this,'subsidyRows')">×</button><div class="subsidy-meta"><select class="sub-status" aria-label="补贴确认状态"><option value="conditional" selected>待申请/有条件</option><option value="confirmed">已确认（合同/正式通知）</option><option value="oral">销售口头承诺</option></select><input type="text" class="sub-condition" placeholder="到账条件，如上牌地、申请期限"></div>`;
+  return d;
+}
+
 function addMfrRow()     { document.getElementById('manufacturerRows').appendChild(makeRow('','mfr-amt','0','manufacturerRows')); }
 function addInsuranceRow() { document.getElementById('insuranceRows').appendChild(makeRow('','ins-amt','0','insuranceRows')); }
 function addExpenseRow() { document.getElementById('expenseRows').appendChild(makeRow('','exp-amt','0','expenseRows')); }
-function addSubsidyRow() { document.getElementById('subsidyRows').appendChild(makeRow('','sub-amt','0','subsidyRows')); }
+function addSubsidyRow() { document.getElementById('subsidyRows').appendChild(makeSubsidyRow('')); }
 function addGiftRow()    { document.getElementById('giftRows').appendChild(makeRow('','gift-amt','0','giftRows')); }
+function addLoanFeeRow() { document.getElementById('loanFeeRows').appendChild(makeRow('','loan-fee-amt','0','loanFeeRows')); }
 
 function removeRow(btn, id) {
   const c = document.getElementById(id);
@@ -987,6 +1188,11 @@ function onDownPaymentModeChange() {
   const mode = document.querySelector('input[name="downPaymentMode"]:checked')?.value || 'ratio';
   document.getElementById('downPaymentRatioGroup').style.display = mode === 'ratio' ? 'flex' : 'none';
   document.getElementById('downPaymentAmountGroup').style.display = mode === 'amount' ? 'flex' : 'none';
+}
+
+function onOwnershipChange() {
+  const years = document.querySelector('input[name="ownershipEnabled"]:checked')?.value || 'off';
+  document.getElementById('ownershipFields').classList.toggle('visible', years !== 'off');
 }
 
 function onTradeInChange() {
@@ -1021,7 +1227,14 @@ function collectDetails(containerId, amtCls) {
   document.querySelectorAll(`#${containerId} .dyn-row`).forEach(row => {
     const name = row.querySelector('.row-name')?.value?.trim() || '项目';
     const amt = parseFloat(row.querySelector('.'+amtCls)?.value) || 0;
-    if (amt > 0) items.push({ name, amt });
+    if (amt !== 0) items.push({
+      name,
+      amt,
+      status: row.querySelector('.sub-status')?.value || 'confirmed',
+      timing: row.querySelector('.sub-status') ? 'post-delivery' : 'delivery',
+      condition: row.querySelector('.sub-condition')?.value?.trim() || '',
+      evidence: row.querySelector('.sub-status')?.value === 'confirmed' ? 'written' : 'none'
+    });
   });
   return items;
 }
@@ -1164,7 +1377,7 @@ function renderRecordsChart(records) {
 /* ==========================================================
    核心计算
 ========================================================== */
-function calculate() {
+function legacyCalculate() {
   const guidePrice   = parseFloat(document.getElementById('guidePrice').value) || 0;
   const vatRate      = parseFloat(document.getElementById('vatRate').value) || POLICY.vat.defaultRate;
   const mfrSubsidy   = sumClass('mfr-amt');
@@ -1663,8 +1876,6 @@ function confirmSave() {
 /* ==========================================================
    localStorage 记录
 ========================================================== */
-const STORAGE_KEY = 'car_calc_records_2026';
-
 function getRecords() {
   try {
     const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
@@ -1780,6 +1991,157 @@ function normalizeImportedRecord(item, index) {
   return record;
 }
 
+function exportRecordsCSV() {
+  const records = getRecords();
+  if (!records.length) { showModal('提示', '<p>暂无可导出的报价记录。</p>'); return; }
+  const headers = ['保存时间', '经销商', '车型', '购车方式', '指导价', '开票价', '提车/首期垫付', '确认口径总支出', '预计总支出', '保险费用', '其他费用', '已确认补贴', '待确认补贴', '赠品估值', '等效支出', '贷款首月月供', '贷款期数', '风险项数量', '政策版本', '备注'];
+  const rows = records.map(function (r) {
+    return [
+      r.savedAt, r.dealership, r.model, r.paymentMethod === 'loan' ? '贷款' : '全款',
+      fmt(r.guidePrice), fmt(r.invoicePrice), fmt(r.payNow), fmt(r.confirmedFinalCost), fmt(r.expectedFinalCost),
+      fmt(r.insuranceExpense), fmt(r.otherExpense), fmt(r.confirmedSubsidy), fmt(r.conditionalSubsidy), fmt(r.giftValue), fmt(r.expectedFinalCost - r.giftValue),
+      r.loanInfo ? fmt(r.loanInfo.firstMonthlyPayment || 0) : '', r.loanInfo ? r.loanInfo.loanMonths : '',
+      Array.isArray(r.riskAlerts) ? r.riskAlerts.length : '', r.policyVersion || '', r.note || ''
+    ];
+  });
+  const csv = [headers].concat(rows).map(function (row) { return row.map(escapeCSVCell).join(','); }).join('\r\n');
+  const date = new Date().toISOString().slice(0, 10);
+  downloadTextFile(`购车报价记录_${date}.csv`, '\ufeff' + csv, 'text/csv;charset=utf-8');
+}
+
+function renderRecordsChart(records) {
+  const card = document.getElementById('recordsChartCard');
+  const chart = document.getElementById('recordsCostChart');
+  if (records.length < 2) {
+    card.style.display = 'none';
+    chart.innerHTML = '';
+    return;
+  }
+  card.style.display = 'block';
+  const sorted = records.slice().sort(function (a, b) { return a.expectedFinalCost - b.expectedFinalCost; }).slice(0, 8);
+  const max = Math.max.apply(Math, sorted.map(function (r) { return r.expectedFinalCost; }).concat([1]));
+  chart.innerHTML = sorted.map(function (r, index) {
+    const pct = Math.max(5, Math.min(100, r.expectedFinalCost / max * 100));
+    const label = (index + 1) + '. ' + (r.dealership || '未填写经销商') + (r.model ? ' · ' + r.model : '');
+    return `<div class="chart-row"><div class="chart-label">${escapeHTML(label)}</div><div class="chart-track"><div class="chart-fill ${index === 0 ? 'negative' : ''}" style="width:${pct}%"></div></div><div class="chart-value">${fmt(r.expectedFinalCost)}</div></div>`;
+  }).join('');
+}
+
+function toggleCompare(id) {
+  const numericId = Number(id);
+  if (selectedCompareIds.includes(numericId)) {
+    selectedCompareIds = selectedCompareIds.filter(function (item) { return item !== numericId; });
+  } else {
+    if (selectedCompareIds.length >= 4) {
+      showModal('最多选择 4 条', '<p>逐项对比最多同时展示 4 条报价，方便在手机和桌面端阅读。</p>');
+      return;
+    }
+    selectedCompareIds.push(numericId);
+  }
+  renderRecords();
+}
+
+function renderSelectedCompare(records) {
+  selectedCompareIds = selectedCompareIds.filter(function (id) { return records.some(function (record) { return record.id === id; }); });
+  const chosen = selectedCompareIds.map(function (id) { return records.find(function (record) { return record.id === id; }); }).filter(Boolean);
+  const card = document.getElementById('selectedCompareCard');
+  if (chosen.length < 2) {
+    card.style.display = 'none';
+    return;
+  }
+  card.style.display = 'block';
+  const models = new Set(chosen.map(function (r) { return r.model || ''; }).filter(Boolean));
+  document.getElementById('selectedCompareHelp').textContent = models.size > 1
+    ? '当前选择的车型名称不同。数值可用于预算比较，但车型配置、保险和赠品不一定具备可比性。'
+    : '绿色数字表示所选报价中的最低成本；“预计总支出”包含待申请或待确认补贴。';
+  const rows = [
+    { label: '指导价', key: 'guidePrice', lower: true },
+    { label: '开票价', key: 'invoicePrice', lower: true },
+    { label: '提车/首期垫付', key: 'payNow', lower: true },
+    { label: '确认口径总支出', key: 'confirmedFinalCost', lower: true },
+    { label: '预计总支出', key: 'expectedFinalCost', lower: true },
+    { label: '保险费用', key: 'insuranceExpense', lower: true },
+    { label: '其他费用', key: 'otherExpense', lower: true },
+    { label: '贷款附加成本', value: function (r) { return r.loanInfo ? r.loanInfo.totalInterest + r.loanInfo.financeFees : 0; }, lower: true },
+    { label: '已确认补贴', key: 'confirmedSubsidy', lower: false },
+    { label: '待确认补贴', key: 'conditionalSubsidy', lower: false },
+    { label: '风险项数量', value: function (r) { return (r.riskAlerts || []).length; }, lower: true }
+  ];
+  document.getElementById('selectedCompareTable').innerHTML = `<thead><tr><th>项目</th>${chosen.map(function (r) { return '<th>' + escapeHTML(r.dealership + (r.model ? ' · ' + r.model : '')) + '</th>'; }).join('')}</tr></thead><tbody>${rows.map(function (row) {
+    const values = chosen.map(function (r) { return row.value ? row.value(r) : Number(r[row.key] || 0); });
+    const best = row.lower ? Math.min.apply(Math, values) : Math.max.apply(Math, values);
+    return '<tr><td>' + row.label + '</td>' + values.map(function (value) { return '<td class="' + (value === best && values.length > 1 ? 'best' : '') + '">' + (row.label === '风险项数量' ? value + ' 项' : fmt(value)) + '</td>'; }).join('') + '</tr>';
+  }).join('')}</tbody>`;
+}
+
+function renderRecordsV16() {
+  const records = getRecords();
+  const grid = document.getElementById('recordsGrid');
+  const empty = document.getElementById('recordsEmpty');
+  const count = document.getElementById('recordsCount');
+  const clearBtn = document.getElementById('clearAllBtn');
+  count.textContent = `共 ${records.length} 条记录`;
+  clearBtn.style.display = records.length ? 'flex' : 'none';
+  if (!records.length) {
+    empty.style.display = 'block';
+    grid.innerHTML = '';
+    renderRecordsChart([]);
+    renderSelectedCompare([]);
+    return;
+  }
+  empty.style.display = 'none';
+  renderRecordsChart(records);
+  renderSelectedCompare(records);
+  const minExpected = Math.min.apply(Math, records.map(function (r) { return r.expectedFinalCost; }));
+  grid.innerHTML = records.slice().reverse().map(function (r) {
+    const active = selectedCompareIds.includes(r.id);
+    const isBest = r.expectedFinalCost === minExpected;
+    const carLabel = r.carType === 'nev' ? '新能源' : '燃油车';
+    const expectedLabel = r.paymentMethod === 'loan' ? '贷款预计成本' : '预计支出';
+    const loanExtra = r.loanInfo ? r.loanInfo.totalInterest + r.loanInfo.financeFees : 0;
+    return `<div class="record-card" data-id="${r.id}" style="${isBest ? 'border-color:var(--accent2);box-shadow:0 0 20px rgba(0,255,157,.12)' : ''}">
+      ${isBest ? '<div style="position:absolute;top:12px;right:12px;background:rgba(0,255,157,.15);border:1px solid rgba(0,255,157,.4);color:var(--accent2);font-size:12px;padding:3px 9px;border-radius:100px;font-family:JetBrains Mono,monospace">最低预计成本</div>' : ''}
+      <div class="rc-header"><div><div class="rc-dealership">${escapeHTML(r.dealership)}</div><div class="rc-model">${escapeHTML(r.model || '未填写车型')}</div></div><div class="rc-date">${escapeHTML((r.savedAt || '').split(' ')[0])}</div></div>
+      <div class="rc-tags"><span class="rc-tag ${r.carType === 'nev' ? 'nev' : 'fuel'}">${carLabel}</span><span class="rc-tag ${r.paymentMethod === 'loan' ? 'loan' : 'trade'}">${r.paymentMethod === 'loan' ? '贷款' : '全款'}</span>${r.conditionalSubsidy > 0 ? '<span class="rc-tag trade">待确认补贴 ' + fmt(r.conditionalSubsidy) + '元</span>' : ''}</div>
+      <div class="rc-prices"><div class="rc-price-item"><div class="label">开票价</div><div class="val" style="color:var(--text-dim)">${fmt(r.invoicePrice)}</div></div><div class="rc-price-item pay"><div class="label">提车/首期</div><div class="val">${fmt(r.payNow)}</div></div><div class="rc-price-item"><div class="label">确认口径</div><div class="val" style="color:var(--accent)">${fmt(r.confirmedFinalCost)}</div></div><div class="rc-price-item final"><div class="label">${expectedLabel}</div><div class="val">${fmt(r.expectedFinalCost)}</div></div>${r.giftValue > 0 ? '<div class="rc-price-item gift"><div class="label">赠品价值</div><div class="val">' + fmt(r.giftValue) + '</div></div>' : ''}${loanExtra > 0 ? '<div class="rc-price-item"><div class="label">贷款附加成本</div><div class="val" style="color:var(--warn)">' + fmt(loanExtra) + '</div></div>' : ''}</div>
+      ${r.note ? '<div style="font-size:13px;color:var(--text-dimmer);background:var(--surface2);border-radius:6px;padding:8px 10px;margin-bottom:10px">💬 ' + escapeHTML(r.note) + '</div>' : ''}
+      <div class="rc-actions"><button class="btn-sec rc-compare-btn ${active ? 'compare-select-active' : ''}" data-id="${r.id}" style="font-size:13px;padding:7px 12px">${active ? '已选对比' : '选择对比'}</button><button class="btn-sec rc-detail-btn" data-id="${r.id}" style="font-size:13px;padding:7px 12px">详情</button><button class="btn-danger rc-delete-btn" data-id="${r.id}" style="font-size:13px;padding:7px 12px">删除</button></div>
+    </div>`;
+  }).join('');
+  grid.onclick = function (event) {
+    const compare = event.target.closest('.rc-compare-btn');
+    if (compare) { event.stopPropagation(); toggleCompare(Number(compare.dataset.id)); return; }
+    const detail = event.target.closest('.rc-detail-btn');
+    if (detail) { event.stopPropagation(); showDetail(Number(detail.dataset.id)); return; }
+    const remove = event.target.closest('.rc-delete-btn');
+    if (remove) { event.stopPropagation(); deleteRecord(Number(remove.dataset.id)); return; }
+    const card = event.target.closest('.record-card');
+    if (card) showDetail(Number(card.dataset.id));
+  };
+}
+
+function showDetailV16(id) {
+  const r = getRecords().find(function (record) { return record.id === id; });
+  if (!r) return;
+  document.getElementById('detailTitle').textContent = '📋 ' + r.dealership + (r.model ? ' · ' + r.model : '');
+  const rows = [
+    ['指导价', fmt(r.guidePrice) + ' 元'], ['开票价', fmt(r.invoicePrice) + ' 元'], ['购置税', fmt(r.tax) + ' 元'],
+    ['保险费用', fmt(r.insuranceExpense) + ' 元'], ['其他费用', fmt(r.otherExpense) + ' 元'],
+    [r.paymentMethod === 'loan' ? '首期需垫付' : '提车时需支付', fmt(r.payNow) + ' 元'],
+    ['已确认补贴', fmt(r.confirmedSubsidy) + ' 元'], ['待确认补贴', fmt(r.conditionalSubsidy) + ' 元'],
+    [r.paymentMethod === 'loan' ? '贷款确认口径总成本' : '确认口径总支出', fmt(r.confirmedFinalCost) + ' 元'],
+    [r.paymentMethod === 'loan' ? '贷款预计总成本' : '预计总支出', fmt(r.expectedFinalCost) + ' 元']
+  ];
+  if (r.loanInfo) rows.splice(6, 0, ['还款方式', r.loanInfo.repaymentMethod === 'equal-principal' ? '等额本金' : '等额本息'], ['首付金额', fmt(r.loanInfo.downPayment) + ' 元'], ['总利息与金融费', fmt(r.loanInfo.totalInterest + r.loanInfo.financeFees) + ' 元']);
+  if (r.ownership) rows.push([r.ownership.years + '年总持有成本', fmt(r.ownership.totalCost) + ' 元']);
+  if (r.note) rows.push(['备注', r.note]);
+  rows.push(['政策版本', r.policyVersion || '未标注'], ['记录时间', r.savedAt]);
+  const risks = (r.riskAlerts || []).map(function (item) { return item.title; }).join('；');
+  if (risks) rows.push(['风险提示', risks]);
+  document.getElementById('detailBody').innerHTML = `<div style="display:flex;flex-direction:column">${rows.map(function (row) { return `<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(42,58,85,.3);gap:12px"><span style="font-size:13px;color:var(--text-dimmer);min-width:110px">${escapeHTML(row[0])}</span><span style="font-size:14px;color:var(--text);text-align:right">${escapeHTML(row[1])}</span></div>`; }).join('')}</div><details style="margin-top:14px"><summary style="font-size:13px;color:var(--text-dimmer);cursor:pointer;padding:6px 0">🧮 查看完整计算过程</summary><pre style="font-family:JetBrains Mono,monospace;font-size:12px;color:var(--text-dim);line-height:2;margin-top:8px;white-space:pre-wrap">${escapeHTML(r.processText)}</pre></details>`;
+  document.getElementById('detailModal').classList.add('show');
+}
+
 function importRecords() {
   const input = document.createElement('input');
   input.type = 'file';
@@ -1859,7 +2221,7 @@ function updateBadge() {
 /* ==========================================================
    渲染记录页
 ========================================================== */
-function renderRecords() {
+function legacyRenderRecords() {
   const records = getRecords();
   const grid = document.getElementById('recordsGrid');
   const empty = document.getElementById('recordsEmpty');
@@ -1957,7 +2319,7 @@ function renderRecords() {
 /* ==========================================================
    记录详情弹窗
 ========================================================== */
-function showDetail(id) {
+function legacyShowDetail(id) {
   const r = getRecords().find(rec => rec.id === id);
   if (!r) return;
   document.getElementById('detailTitle').textContent = `📋 ${r.dealership}${r.model ? ' · ' + r.model : ''}`;
@@ -2028,6 +2390,484 @@ function showModal(title, body) {
 }
 function closeModal() { document.getElementById('modalOverlay').classList.remove('show'); }
 
+/* ==========================================================
+   v1.4-v1.6：页面适配层（共用 src/quote-engine.js）
+========================================================== */
+function getCheckedValue(name, fallback) {
+  return document.querySelector(`input[name="${name}"]:checked`)?.value || fallback || '';
+}
+
+function readNumber(id, fallback) {
+  const value = document.getElementById(id)?.value;
+  return value === '' || value === undefined ? (fallback === undefined ? 0 : fallback) : Number(value);
+}
+
+function detailText(items, suffix) {
+  const text = (items || []).map(function (item) {
+    const state = item.status === 'confirmed' ? '已确认' : item.status === 'oral' ? '口头承诺' : '待确认';
+    return item.name + ' ' + fmt(item.amt) + '元' + (suffix ? '（' + state + '）' : '');
+  }).join(' · ');
+  return text || '暂无明细';
+}
+
+function getOwnershipInput(insuranceExpense) {
+  const mode = getCheckedValue('ownershipEnabled', 'off');
+  return {
+    enabled: mode !== 'off',
+    years: mode === 'off' ? 3 : Number(mode),
+    annualMileage: readNumber('annualMileage'),
+    energyCostPer100km: readNumber('energyCostPer100km'),
+    annualInsurance: document.getElementById('annualInsurance').value === '' ? insuranceExpense : readNumber('annualInsurance'),
+    annualMaintenance: readNumber('annualMaintenance'),
+    residualRate: readNumber('residualRate')
+  };
+}
+
+function collectQuoteInput() {
+  const insuranceDetails = collectDetails('insuranceRows', 'ins-amt');
+  const expDetails = collectDetails('expenseRows', 'exp-amt');
+  const paymentMethod = getCheckedValue('paymentMethod', 'full');
+  const vatRaw = document.getElementById('vatRate').value;
+  const insuranceExpense = insuranceDetails.reduce(function (total, item) { return total + item.amt; }, 0);
+  return {
+    guidePrice: readNumber('guidePrice'),
+    vatRate: vatRaw === '' ? POLICY.vat.defaultRate : Number(vatRaw),
+    mfrDetails: collectDetails('manufacturerRows', 'mfr-amt'),
+    insuranceDetails: insuranceDetails,
+    expDetails: expDetails,
+    subDetails: collectDetails('subsidyRows', 'sub-amt'),
+    giftDetails: collectDetails('giftRows', 'gift-amt'),
+    loanFeeDetails: collectDetails('loanFeeRows', 'loan-fee-amt'),
+    paymentMethod: paymentMethod,
+    loan: {
+      downPaymentMode: getCheckedValue('downPaymentMode', 'ratio'),
+      downPaymentRatio: readNumber('downPaymentRatio'),
+      downPaymentAmount: readNumber('downPaymentAmount'),
+      loanMonths: readNumber('loanMonths'),
+      annualRate: readNumber('annualRate'),
+      repaymentMethod: getCheckedValue('repaymentMethod', 'equal-payment'),
+      financeFee: readNumber('financeFee'),
+      earlySettlementMonth: readNumber('earlySettlementMonth'),
+      earlySettlementPenaltyRate: readNumber('earlySettlementPenaltyRate')
+    },
+    carType: getCheckedValue('carType'),
+    nevType: getCheckedValue('nevType'),
+    displacement: getCheckedValue('displacement'),
+    tradeIn: getCheckedValue('tradeIn', 'none'),
+    oldCarType: getCheckedValue('oldCarType'),
+    oldCarDate: document.getElementById('oldCarDate').value,
+    owned1Year: getCheckedValue('owned1Year'),
+    ownership: getOwnershipInput(insuranceExpense)
+  };
+}
+
+function buildProcessText(r) {
+  const lines = [];
+  lines.push('─── 基础价格 ───');
+  lines.push('指导价          ' + fmt(r.guidePrice) + ' 元');
+  (r.mfrDetails || []).forEach(function (item) { lines.push('厂商优惠       -  ' + item.name + ' ' + fmt(item.amt) + ' 元'); });
+  lines.push('开票价          ' + fmt(r.invoicePrice) + ' 元');
+  lines.push('不含税价        ' + fmt(r.exTaxPrice) + ' 元');
+  lines.push('购置税          ' + fmt(r.tax) + ' 元（' + r.taxNote + '）');
+  lines.push('');
+  lines.push('─── 提车与费用 ───');
+  lines.push((r.paymentMethod === 'loan' ? '首期需垫付' : '提车时需支付') + '      ' + fmt(r.payNow) + ' 元');
+  lines.push('保险费用        ' + fmt(r.insuranceExpense) + ' 元');
+  lines.push('其他费用        ' + fmt(r.otherExpense) + ' 元');
+  if (r.loanInfo) {
+    const label = r.loanInfo.repaymentMethod === 'equal-principal' ? '等额本金' : '等额本息';
+    lines.push('');
+    lines.push('─── 贷款方案（' + label + '） ───');
+    lines.push('首付金额        ' + fmt(r.loanInfo.downPayment) + ' 元（' + fmt(r.loanInfo.downPaymentRatio) + '%）');
+    lines.push('贷款本金        ' + fmt(r.loanInfo.loanPrincipal) + ' 元');
+    lines.push('首月月供        ' + fmt(r.loanInfo.firstMonthlyPayment) + ' 元');
+    if (r.loanInfo.repaymentMethod === 'equal-principal') lines.push('末月月供        ' + fmt(r.loanInfo.lastMonthlyPayment) + ' 元');
+    lines.push('总利息          ' + fmt(r.loanInfo.totalInterest) + ' 元');
+    lines.push('金融附加费用    ' + fmt(r.loanInfo.financeFees) + ' 元');
+    if (r.loanInfo.earlySettlement) {
+      const early = r.loanInfo.earlySettlement;
+      lines.push('提前结清        ' + early.month + ' 期后，剩余本金 ' + fmt(early.remainingPrincipal) + ' 元，违约金 ' + fmt(early.penalty) + ' 元');
+    }
+  }
+  lines.push('');
+  lines.push('─── 补贴口径 ───');
+  lines.push('已确认补贴      ' + fmt(r.confirmedSubsidy) + ' 元');
+  lines.push('待确认补贴      ' + fmt(r.conditionalSubsidy) + ' 元（含以旧换新国补）');
+  lines.push('确认口径总支出  ' + fmt(r.confirmedFinalCost) + ' 元');
+  lines.push('预计总支出      ' + fmt(r.expectedFinalCost) + ' 元');
+  if (r.giftValue > 0) lines.push('综合等效支出    ' + fmt(r.expectedFinalCost - r.giftValue) + ' 元（扣赠品估值）');
+  if (r.ownership) {
+    lines.push('');
+    lines.push('─── ' + r.ownership.years + ' 年持有成本 ───');
+    lines.push('能源费用        ' + fmt(r.ownership.energyCost) + ' 元');
+    lines.push('续保费用        ' + fmt(r.ownership.renewalInsurance) + ' 元');
+    lines.push('保养费用        ' + fmt(r.ownership.maintenanceCost) + ' 元');
+    lines.push('预计残值       -  ' + fmt(r.ownership.residualValue) + ' 元');
+    lines.push(r.ownership.years + ' 年总成本      ' + fmt(r.ownership.totalCost) + ' 元');
+  }
+  lines.push('');
+  lines.push('政策配置：' + (r.policyName || r.policyVersion || '未标注') + ' · ' + (r.policyUpdatedAt || '未标注'));
+  return lines.join('\n');
+}
+
+function calculate() {
+  const outcome = CarCalcEngine.calculateQuote(collectQuoteInput(), POLICY);
+  if (outcome.errors.length) {
+    showModal('⚠️ 请先修正输入', '<p>' + outcome.errors.map(escapeHTML).join('</p><p>') + '</p>');
+    return;
+  }
+  lastCalcResult = outcome.result;
+  lastCalcResult.processText = buildProcessText(lastCalcResult);
+  renderCalculationResult(lastCalcResult);
+  goPage(2);
+}
+
+function renderCalculationResult(r) {
+  const isLoan = r.paymentMethod === 'loan';
+  const finalLabel = isLoan ? '贷款预计总成本' : '预计总支出';
+  const confirmedLabel = isLoan ? '贷款确认口径总成本' : '确认口径总支出';
+  document.getElementById('p2Title').textContent = '费用明细与决策口径';
+  const carLabel = r.carType === 'nev' ? (r.nevType === 'bev' ? '纯电动' : r.nevType === 'phev' ? '插混/增程' : '燃料电池') : (r.displacement === 'le2' ? '燃油车≤2L' : '燃油车>2L');
+  document.getElementById('p2Subtitle').textContent = `${carLabel} · ${isLoan ? '贷款购车' : '全款购车'} · ${r.policyName || r.policyVersion || '政策配置未标注'}`;
+  document.getElementById('rInvoice').textContent = fmt(r.invoicePrice) + ' 元';
+  document.getElementById('rExTax').textContent = fmt(r.exTaxPrice) + ' 元';
+  document.getElementById('rTax').textContent = fmt(r.tax) + ' 元';
+  document.getElementById('rTaxNote').textContent = r.taxNote;
+  document.getElementById('rInsurance').textContent = fmt(r.insuranceExpense) + ' 元';
+  document.getElementById('rInsuranceDetail').textContent = detailText(r.insuranceDetails, false);
+  document.getElementById('rExpense').textContent = fmt(r.otherExpense) + ' 元';
+  document.getElementById('rExpDetail').textContent = detailText(r.expDetails, false);
+  document.getElementById('rNational').textContent = fmt(r.nationalSubsidy) + ' 元';
+  document.getElementById('rNationalNote').textContent = r.nationalNote;
+  document.getElementById('rSubsidy').textContent = fmt(r.otherSubsidy) + ' 元';
+  document.getElementById('rSubDetail').textContent = detailText(r.subDetails, true);
+  document.getElementById('rPayLabel').textContent = isLoan ? '首期需垫付' : '提车时需支付';
+  document.getElementById('rPayNote').textContent = isLoan ? '首付+税费+保险+其他费用+金融费用' : '开票价+购置税+保险+其他费用';
+  document.getElementById('rPayNow').textContent = fmt(r.payNow) + ' 元';
+  document.getElementById('rConfirmedLabel').textContent = confirmedLabel;
+  document.getElementById('rConfirmedNote').textContent = '仅扣已确认补贴 ' + fmt(r.confirmedSubsidy) + ' 元';
+  document.getElementById('rConfirmed').textContent = fmt(r.confirmedFinalCost) + ' 元';
+  document.getElementById('rFinalLabel').textContent = finalLabel;
+  document.getElementById('rFinalNote').textContent = '含待申请补贴 ' + fmt(r.conditionalSubsidy) + ' 元';
+  document.getElementById('rFinal').textContent = fmt(r.expectedFinalCost) + ' 元';
+  document.getElementById('rExpectedLayerNote').textContent = r.conditionalSubsidy > 0 ? '含待确认口径' : '无待确认补贴';
+  document.getElementById('sumPayLabel').textContent = isLoan ? '首期需垫付' : '提车时需垫付';
+  document.getElementById('sumPaySub').textContent = isLoan ? '首付+税费+金融费用' : '含购置税+保险+其他费用';
+  document.getElementById('sumPay').textContent = fmt(r.payNow) + ' 元';
+  document.getElementById('sumConfirmed').textContent = fmt(r.confirmedFinalCost) + ' 元';
+  document.getElementById('sumFinalLabel').textContent = finalLabel;
+  document.getElementById('sumFinalSub').textContent = r.conditionalSubsidy > 0 ? '包含待确认补贴' : '无待确认补贴';
+  document.getElementById('sumFinal').textContent = fmt(r.expectedFinalCost) + ' 元';
+  document.getElementById('sumGift').textContent = r.giftValue > 0 ? fmt(r.giftValue) + ' 元' : '—';
+  document.getElementById('sumSavings').textContent = fmt(r.totalSavings) + ' 元';
+  document.getElementById('sumSavingsSub').textContent = `厂商优惠 ${fmt(r.mfrSubsidy)}元 + 购置税优惠 ${fmt(r.taxSaving)}元 + 各类补贴 ${fmt(r.nationalSubsidy + r.otherSubsidy)}元`;
+
+  const loanBlock = document.getElementById('loanDetailBlock');
+  loanBlock.style.display = isLoan ? 'block' : 'none';
+  if (isLoan) {
+    const loan = r.loanInfo;
+    const methodLabel = loan.repaymentMethod === 'equal-principal' ? '等额本金' : '等额本息';
+    document.getElementById('rDownPayment').textContent = fmt(loan.downPayment) + ' 元';
+    document.getElementById('rLoanPrincipal').textContent = fmt(loan.loanPrincipal) + ' 元';
+    document.getElementById('rMonthlyPayment').textContent = fmt(loan.firstMonthlyPayment) + ' 元/月';
+    document.getElementById('rLoanTermNote').textContent = `${loan.loanMonths}期 · 年化${fmt(loan.annualRate)}% · ${methodLabel}${loan.repaymentMethod === 'equal-principal' ? '（末月 ' + fmt(loan.lastMonthlyPayment) + ' 元）' : ''}`;
+    document.getElementById('rLoanExtra').textContent = fmt(loan.totalInterest + loan.financeFees) + ' 元';
+    const feeDetails = (loan.loanFeeDetails || []).map(function (item) { return item.name + ' ' + fmt(item.amt) + '元'; }).join(' · ');
+    document.getElementById('rFinanceFeeNote').textContent = `利息 ${fmt(loan.totalInterest)} 元 · 金融服务费 ${fmt(loan.financeFee)} 元${feeDetails ? ' · ' + feeDetails : ''}`;
+    const earlyRow = document.getElementById('rEarlySettlementRow');
+    if (loan.earlySettlement && r.earlyExpectedFinalCost !== null) {
+      earlyRow.style.display = 'flex';
+      document.getElementById('rEarlySettlementCost').textContent = fmt(r.earlyExpectedFinalCost) + ' 元';
+      document.getElementById('rEarlySettlementNote').textContent = `${loan.earlySettlement.month}期后结清 · 剩余本金 ${fmt(loan.earlySettlement.remainingPrincipal)} 元 · 违约金 ${fmt(loan.earlySettlement.penalty)} 元 · 预计节省利息 ${fmt(loan.earlySettlement.interestSaved)} 元`;
+    } else {
+      earlyRow.style.display = 'none';
+    }
+  }
+
+  if (r.giftValue > 0) {
+    document.getElementById('rGift').textContent = fmt(r.giftValue) + ' 元';
+    document.getElementById('rGiftDetail').innerHTML = (r.giftDetails || []).map(function (item) { return '· ' + escapeHTML(item.name) + ' ' + fmt(item.amt) + '元'; }).join('<br>');
+    document.getElementById('rNet').textContent = fmt(r.expectedFinalCost - r.giftValue) + ' 元';
+    document.getElementById('rGiftRow').style.display = 'flex';
+    document.getElementById('rNetRow').style.display = 'flex';
+  } else {
+    document.getElementById('rGiftRow').style.display = 'none';
+    document.getElementById('rNetRow').style.display = 'none';
+  }
+
+  const alertsContainer = document.getElementById('resultAlerts');
+  alertsContainer.innerHTML = (r.nationalAlerts || []).map(function (alert) {
+    const icon = { danger: '❌', warn: '⚠️', success: '✅', info: 'ℹ️' }[alert.type] || 'ℹ️';
+    return `<div class="alert alert-${escapeHTML(alert.type || 'info')}"><span class="alert-icon">${icon}</span><div>${escapeHTML(alert.msg)}</div></div>`;
+  }).join('');
+  renderRiskAlerts(r.riskAlerts || CarCalcEngine.buildRiskAlerts(r));
+  renderCurrentChart(r);
+  renderLoanComparison(r);
+  renderOwnershipCost(r);
+  const policyStatus = r.policyStatus || CarCalcEngine.policyStatus(POLICY);
+  document.getElementById('resultPolicyMeta').textContent = `${r.policyName || '全国通用估算参数'} · 版本 ${r.policyVersion || '未标注'} · 更新时间 ${r.policyUpdatedAt || '未标注'} · ${policyStatus.message}`;
+  document.getElementById('processText').textContent = r.processText || buildProcessText(r);
+}
+
+function renderCurrentChart(r) {
+  const loanExtra = r.loanInfo ? r.loanInfo.totalInterest + r.loanInfo.financeFees : 0;
+  const rows = [
+    { label: '开票价', value: r.invoicePrice, cls: '' },
+    { label: '购置税', value: r.tax, cls: 'warn' },
+    { label: '保险费用', value: r.insuranceExpense, cls: 'warn' },
+    { label: '其他费用', value: r.otherExpense, cls: 'warn' },
+    { label: '贷款利息/金融费', value: loanExtra, cls: 'warn' },
+    { label: '已确认补贴', value: -r.confirmedSubsidy, cls: 'negative' },
+    { label: '待确认补贴', value: -r.conditionalSubsidy, cls: 'negative' },
+    { label: '赠品估值', value: -r.giftValue, cls: 'gift' }
+  ].filter(function (item) { return Math.abs(item.value) > 0.005; });
+  const max = Math.max.apply(Math, rows.map(function (item) { return Math.abs(item.value); }).concat([Math.abs(r.expectedFinalCost), 1]));
+  document.getElementById('currentCostChart').innerHTML = rows.map(function (item) {
+    const pct = Math.max(3, Math.min(100, Math.abs(item.value) / max * 100));
+    return `<div class="chart-row"><div class="chart-label">${escapeHTML(item.label)}</div><div class="chart-track"><div class="chart-fill ${item.cls}" style="width:${pct}%"></div></div><div class="chart-value">${item.value < 0 ? '-' : '+'}${fmt(Math.abs(item.value))}</div></div>`;
+  }).join('') + `<div class="chart-total"><span>预计总支出</span><strong>${fmt(r.expectedFinalCost)} 元</strong></div>`;
+}
+
+function renderLoanComparison(r) {
+  const card = document.getElementById('loanCompareCard');
+  if (!r.loanInfo || !Array.isArray(r.loanComparison) || !r.loanComparison.length) {
+    card.style.display = 'none';
+    return;
+  }
+  card.style.display = 'block';
+  const currentMethod = r.loanInfo.repaymentMethod;
+  document.getElementById('loanCompareTable').innerHTML = `<thead><tr><th>方案</th><th>首期/提车垫付</th><th>首月月供</th><th>总利息</th><th>金融附加费</th><th>预计总支出</th></tr></thead><tbody>${r.loanComparison.map(function (item) {
+    const active = item.repaymentMethod === currentMethod;
+    return `<tr><td>${escapeHTML(item.label)}${active ? '（当前）' : ''}</td><td>${fmt(item.payNow)}</td><td>${item.firstMonthlyPayment ? fmt(item.firstMonthlyPayment) : '—'}</td><td>${fmt(item.totalInterest)}</td><td>${fmt(item.financeFees)}</td><td class="${item.expectedCost === Math.min.apply(Math, r.loanComparison.map(function (row) { return row.expectedCost; })) ? 'best' : ''}">${fmt(item.expectedCost)}</td></tr>`;
+  }).join('')}</tbody>`;
+  const schedule = r.loanInfo.schedule || [];
+  document.getElementById('loanScheduleTable').innerHTML = `<thead><tr><th>期数</th><th>期初本金</th><th>月供</th><th>本金</th><th>利息</th><th>剩余本金</th></tr></thead><tbody>${schedule.map(function (item) {
+    return `<tr><td>${item.month}</td><td>${fmt(item.beginning)}</td><td>${fmt(item.payment)}</td><td>${fmt(item.principal)}</td><td>${fmt(item.interest)}</td><td>${fmt(item.remaining)}</td></tr>`;
+  }).join('')}</tbody>`;
+}
+
+function renderOwnershipCost(r) {
+  const card = document.getElementById('ownershipCard');
+  if (!r.ownership) {
+    card.style.display = 'none';
+    return;
+  }
+  card.style.display = 'block';
+  const o = r.ownership;
+  const rows = [
+    ['购车预计总支出', o.baseCost],
+    ['能源费用', o.energyCost],
+    ['续保费用（第2年起）', o.renewalInsurance],
+    ['保养费用', o.maintenanceCost],
+    ['预计期末残值', -o.residualValue],
+    [o.years + ' 年总持有成本', o.totalCost],
+    ['年均持有成本', o.annualAverageCost]
+  ];
+  document.getElementById('ownershipTable').innerHTML = `<thead><tr><th>项目</th><th>${o.years} 年估算（元）</th></tr></thead><tbody>${rows.map(function (row, index) {
+    return `<tr><td>${row[0]}</td><td class="${index >= rows.length - 2 ? 'best' : row[1] < 0 ? 'best' : ''}">${row[1] < 0 ? '-' : ''}${fmt(Math.abs(row[1]))}</td></tr>`;
+  }).join('')}</tbody>`;
+}
+
+function buildShareText(r) {
+  if (!r) return '';
+  const lines = [
+    '购车报价摘要',
+    `政策配置：${r.policyName || r.policyVersion || '未标注'}（${r.policyUpdatedAt || '未标注'}）`,
+    `指导价：${fmt(r.guidePrice)} 元`,
+    `开票价：${fmt(r.invoicePrice)} 元`,
+    `购置税：${fmt(r.tax)} 元`,
+    `保险费用：${fmt(r.insuranceExpense)} 元`,
+    `其他费用：${fmt(r.otherExpense)} 元`,
+    `${r.paymentMethod === 'loan' ? '首期需垫付' : '提车时需垫付'}：${fmt(r.payNow)} 元`,
+    `确认口径总支出：${fmt(r.confirmedFinalCost)} 元`,
+    `预计总支出：${fmt(r.expectedFinalCost)} 元（含待确认补贴 ${fmt(r.conditionalSubsidy)} 元）`,
+    `赠品估值：${fmt(r.giftValue)} 元`,
+    `综合等效支出：${fmt(r.expectedFinalCost - r.giftValue)} 元`
+  ];
+  if (r.loanInfo) {
+    lines.splice(7, 0,
+      `贷款方式：${r.loanInfo.repaymentMethod === 'equal-principal' ? '等额本金' : '等额本息'}`,
+      `首付：${fmt(r.loanInfo.downPayment)} 元（${fmt(r.loanInfo.downPaymentRatio)}%）`,
+      `首月月供：${fmt(r.loanInfo.firstMonthlyPayment)} 元 × ${r.loanInfo.loanMonths}期`,
+      `总利息与金融附加费：${fmt(r.loanInfo.totalInterest + r.loanInfo.financeFees)} 元`
+    );
+  }
+  if (r.ownership) lines.push(`${r.ownership.years}年总持有成本：${fmt(r.ownership.totalCost)} 元`);
+  lines.push('注：政策、补贴、金融方案以官方公告、当地细则、合同和正式报价为准。');
+  return lines.join('\n');
+}
+
+async function shareResult() {
+  if (!lastCalcResult) { showModal('提示', '<p>请先完成计算。</p>'); return; }
+  const text = buildShareText(lastCalcResult);
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: '购车报价摘要', text: text });
+      return;
+    }
+    await copyTextToClipboard(text);
+    showModal('✅ 已复制', '<p>报价摘要已复制到剪贴板，可以直接发送给家人或朋友讨论。</p>');
+  } catch (err) {
+    if (err && err.name === 'AbortError') return;
+    showModal('复制失败', '<p>当前浏览器不允许自动复制，请使用“查看计算过程”手动复制结果。</p>');
+  }
+}
+
+function encodeSharePayload(value) {
+  return btoa(encodeURIComponent(value).replace(/%([0-9A-F]{2})/g, function (_, code) {
+    return String.fromCharCode(parseInt(code, 16));
+  }));
+}
+
+function decodeSharePayload(value) {
+  const binary = atob(value);
+  const encoded = Array.prototype.map.call(binary, function (char) {
+    return '%' + ('00' + char.charCodeAt(0).toString(16)).slice(-2);
+  }).join('');
+  return decodeURIComponent(encoded);
+}
+
+async function shareQuoteLink() {
+  if (!lastCalcResult) { showModal('提示', '<p>请先完成计算。</p>'); return; }
+  const payloadResult = Object.assign({}, lastCalcResult, { processText: '' });
+  const encoded = encodeSharePayload(JSON.stringify({ version: '1.6.0', result: payloadResult }));
+  const url = location.origin + location.pathname + '#quote=' + encoded;
+  try {
+    await copyTextToClipboard(url);
+    const note = url.length > 12000 ? '<p style="margin-top:8px">当前报价明细较多，链接较长；如部分聊天工具无法发送，请改用 JSON 导出。</p>' : '';
+    showModal('🔗 报价链接已复制', '<p>打开链接后可直接查看本次结果。链接只保存在浏览器地址中，不经过本项目服务器；请勿包含手机号、身份证号或未脱敏合同内容。</p>' + note);
+  } catch (err) {
+    showModal('生成失败', '<p>当前浏览器无法复制链接，请使用 JSON 导出功能分享完整记录。</p>');
+  }
+}
+
+function loadSharedQuoteFromHash() {
+  const match = location.hash.match(/^#quote=(.+)$/);
+  if (!match) return;
+  try {
+    const payload = JSON.parse(decodeSharePayload(match[1]));
+    if (!payload || !payload.result) throw new Error('missing result');
+    const record = normalizeImportedRecord(payload.result, 0);
+    if (!record) throw new Error('invalid result');
+    lastCalcResult = record;
+    lastCalcResult.processText = lastCalcResult.processText || buildProcessText(lastCalcResult);
+    renderCalculationResult(lastCalcResult);
+    goPage(2);
+    history.replaceState(null, '', location.pathname + location.search);
+    setTimeout(function () {
+      showModal('🔗 已载入分享报价', '<p>这是他人分享的计算结果，可查看费用明细、风险提示和计算过程；保存前请自行核对输入、政策版本与报价条件。</p>');
+    }, 0);
+  } catch (err) {
+    history.replaceState(null, '', location.pathname + location.search);
+    setTimeout(function () { showModal('链接无效', '<p>无法读取该报价链接，可能是链接不完整或数据已损坏。</p>'); }, 0);
+  }
+}
+
+function buildReportHTML(r) {
+  const rows = [
+    ['指导价', fmt(r.guidePrice) + ' 元'],
+    ['开票价', fmt(r.invoicePrice) + ' 元'],
+    ['购置税', fmt(r.tax) + ' 元（' + r.taxNote + '）'],
+    ['保险费用', fmt(r.insuranceExpense) + ' 元（' + detailText(r.insuranceDetails, false) + '）'],
+    ['其他费用', fmt(r.otherExpense) + ' 元（' + detailText(r.expDetails, false) + '）'],
+    [r.paymentMethod === 'loan' ? '首期需垫付' : '提车时需垫付', fmt(r.payNow) + ' 元'],
+    ['已确认补贴', fmt(r.confirmedSubsidy) + ' 元'],
+    ['待确认补贴', fmt(r.conditionalSubsidy) + ' 元'],
+    [r.paymentMethod === 'loan' ? '贷款确认口径总成本' : '确认口径总支出', fmt(r.confirmedFinalCost) + ' 元'],
+    [r.paymentMethod === 'loan' ? '贷款预计总成本' : '预计总支出', fmt(r.expectedFinalCost) + ' 元'],
+    ['赠品估值', fmt(r.giftValue) + ' 元'],
+    ['综合等效支出', fmt(r.expectedFinalCost - r.giftValue) + ' 元']
+  ];
+  if (r.loanInfo) rows.splice(6, 0,
+    ['还款方式', r.loanInfo.repaymentMethod === 'equal-principal' ? '等额本金' : '等额本息'],
+    ['首付金额', fmt(r.loanInfo.downPayment) + ' 元（' + fmt(r.loanInfo.downPaymentRatio) + '%）'],
+    ['总利息', fmt(r.loanInfo.totalInterest) + ' 元'],
+    ['金融附加费用', fmt(r.loanInfo.financeFees) + ' 元']
+  );
+  const ownershipRows = r.ownership ? `
+    <h2>${r.ownership.years} 年持有成本</h2>
+    <table><tr><td>能源费用</td><td class="amount">${fmt(r.ownership.energyCost)} 元</td></tr><tr><td>续保费用</td><td class="amount">${fmt(r.ownership.renewalInsurance)} 元</td></tr><tr><td>保养费用</td><td class="amount">${fmt(r.ownership.maintenanceCost)} 元</td></tr><tr><td>预计残值</td><td class="amount">-${fmt(r.ownership.residualValue)} 元</td></tr><tr><td>${r.ownership.years} 年总持有成本</td><td class="amount">${fmt(r.ownership.totalCost)} 元</td></tr></table>` : '';
+  const risks = r.riskAlerts || CarCalcEngine.buildRiskAlerts(r);
+  return `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>购车报价报告</title><style>body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;color:#111827;line-height:1.7;margin:32px;background:#f8fafc}.report{max-width:860px;margin:auto;background:#fff;border:1px solid #dbe4f0;border-radius:12px;padding:32px}h1{font-size:28px;margin:0 0 8px}h2{font-size:18px;margin:28px 0 12px;border-bottom:1px solid #e5e7eb;padding-bottom:8px}.meta{color:#64748b;font-size:13px;margin-bottom:18px}table{width:100%;border-collapse:collapse}td{border-bottom:1px solid #e5e7eb;padding:10px 8px;vertical-align:top}td:first-child{color:#64748b;width:210px}.amount{font-family:"Consolas","SFMono-Regular",monospace;font-weight:700}.risk{border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin:8px 0;background:#f8fafc}.risk strong{display:block;margin-bottom:3px}pre{white-space:pre-wrap;background:#0f172a;color:#dbeafe;border-radius:8px;padding:16px;font-size:12px;line-height:1.8}.disclaimer{font-size:12px;color:#64748b;margin-top:24px}@media print{body{background:#fff;margin:0}.report{border:none;border-radius:0}}</style></head><body><main class="report"><h1>购车报价报告</h1><div class="meta">生成时间：${escapeHTML(new Date().toLocaleString('zh-CN'))} · 政策配置：${escapeHTML(r.policyName || r.policyVersion || '未标注')} · 版本：${escapeHTML(r.policyVersion || '未标注')} · 更新：${escapeHTML(r.policyUpdatedAt || '未标注')}</div><h2>核心费用与报价口径</h2><table>${rows.map(function (row) { return '<tr><td>' + escapeHTML(row[0]) + '</td><td class="amount">' + escapeHTML(row[1]) + '</td></tr>'; }).join('')}</table>${ownershipRows}<h2>风险提示</h2>${risks.map(function (item) { return '<div class="risk"><strong>' + escapeHTML(item.title) + '</strong><div>' + escapeHTML(item.msg) + '</div></div>'; }).join('')}<h2>计算过程</h2><pre>${escapeHTML(r.processText || buildProcessText(r))}</pre><div class="disclaimer">本报告由购车费用全维度计算器在浏览器本地生成，仅用于预算估算和报价对比。购置税、以旧换新、地方补贴、保险和金融方案均以官方公告、当地细则、合同、发票和金融机构正式报价为准。</div></main></body></html>`;
+}
+
+function exportReport() {
+  if (!lastCalcResult) { showModal('提示', '<p>请先完成计算。</p>'); return; }
+  const date = new Date().toISOString().slice(0, 10);
+  downloadTextFile(`购车报价报告_${date}.html`, buildReportHTML(lastCalcResult), 'text/html;charset=utf-8');
+  showModal('✅ 报告已生成', '<p>已导出 HTML 报价报告。打开文件后可通过浏览器打印功能另存为 PDF，用于线下沟通和留档。</p>');
+}
+
+function normalizeImportedRecord(item, index) {
+  if (!item || typeof item !== 'object') return null;
+  const mustHave = ['guidePrice', 'invoicePrice', 'payNow', 'finalCost'];
+  if (!mustHave.every(function (key) { return Number.isFinite(Number(item[key])); })) return null;
+  const record = Object.assign({}, item);
+  const numericKeys = ['guidePrice', 'vatRate', 'mfrSubsidy', 'insuranceExpense', 'otherExpense', 'extraExpense', 'otherSubsidy', 'giftValue', 'invoicePrice', 'exTaxPrice', 'tax', 'nationalSubsidy', 'payNow', 'grossCost', 'confirmedOtherSubsidy', 'conditionalOtherSubsidy', 'confirmedSubsidy', 'conditionalSubsidy', 'confirmedFinalCost', 'expectedFinalCost', 'finalCost', 'totalSavings', 'taxSaving'];
+  numericKeys.forEach(function (key) { record[key] = Number(record[key] || 0); });
+  record.id = Number(record.id) || (Date.now() + index);
+  record.dealership = String(record.dealership || '导入记录');
+  record.model = String(record.model || '');
+  record.note = String(record.note || '');
+  record.savedAt = String(record.savedAt || new Date().toLocaleString('zh-CN'));
+  record.paymentMethod = record.paymentMethod === 'loan' ? 'loan' : 'full';
+  record.carType = record.carType === 'nev' ? 'nev' : 'fuel';
+  record.tradeIn = ['none', 'scrap', 'swap'].includes(record.tradeIn) ? record.tradeIn : 'none';
+  ['insuranceDetails', 'expDetails', 'subDetails', 'giftDetails', 'mfrDetails', 'loanFeeDetails'].forEach(function (key) {
+    record[key] = Array.isArray(record[key]) ? record[key] : [];
+  });
+  record.insuranceExpense = Number.isFinite(record.insuranceExpense) ? record.insuranceExpense : 0;
+  record.otherExpense = Number.isFinite(record.otherExpense) && record.otherExpense !== 0 ? record.otherExpense : Math.max(0, record.extraExpense - record.insuranceExpense);
+  record.extraExpense = record.insuranceExpense + record.otherExpense;
+  record.confirmedOtherSubsidy = Number.isFinite(Number(item.confirmedOtherSubsidy)) ? Number(item.confirmedOtherSubsidy) : 0;
+  record.conditionalOtherSubsidy = Number.isFinite(Number(item.conditionalOtherSubsidy)) ? Number(item.conditionalOtherSubsidy) : record.otherSubsidy;
+  record.confirmedSubsidy = Number.isFinite(Number(item.confirmedSubsidy)) ? Number(item.confirmedSubsidy) : record.confirmedOtherSubsidy;
+  record.conditionalSubsidy = Number.isFinite(Number(item.conditionalSubsidy)) ? Number(item.conditionalSubsidy) : record.nationalSubsidy + record.conditionalOtherSubsidy;
+  record.expectedFinalCost = Number.isFinite(Number(item.expectedFinalCost)) ? Number(item.expectedFinalCost) : Number(record.finalCost);
+  record.finalCost = record.expectedFinalCost;
+  record.confirmedFinalCost = Number.isFinite(Number(item.confirmedFinalCost)) ? Number(item.confirmedFinalCost) : record.expectedFinalCost + record.conditionalSubsidy;
+  record.grossCost = Number.isFinite(Number(item.grossCost)) ? Number(item.grossCost) : record.confirmedFinalCost + record.confirmedSubsidy;
+  record.schemaVersion = String(record.schemaVersion || '1.3.0');
+  record.policyName = String(record.policyName || '全国通用估算参数');
+  record.policyVersion = String(record.policyVersion || '历史记录');
+  record.policyUpdatedAt = String(record.policyUpdatedAt || '未标注');
+  record.policyStatus = record.policyStatus && typeof record.policyStatus === 'object' ? record.policyStatus : { level: 'valid', message: '历史记录的政策有效期未标注。' };
+  if (record.paymentMethod === 'loan' && record.loanInfo && typeof record.loanInfo === 'object') {
+    const loan = record.loanInfo;
+    const feeDetails = Array.isArray(loan.loanFeeDetails) ? loan.loanFeeDetails : [];
+    const extraFees = feeDetails.reduce(function (total, detail) { return total + Number(detail.amt || 0); }, 0);
+    record.loanInfo = Object.assign({}, loan, {
+      downPaymentMode: loan.downPaymentMode === 'amount' ? 'amount' : 'ratio',
+      downPaymentRatio: Number(loan.downPaymentRatio || 0),
+      downPayment: Number(loan.downPayment || 0),
+      loanPrincipal: Number(loan.loanPrincipal || 0),
+      loanMonths: Number(loan.loanMonths || 0),
+      annualRate: Number(loan.annualRate || 0),
+      repaymentMethod: loan.repaymentMethod === 'equal-principal' ? 'equal-principal' : 'equal-payment',
+      monthlyPayment: Number(loan.monthlyPayment || 0),
+      firstMonthlyPayment: Number(loan.firstMonthlyPayment || loan.monthlyPayment || 0),
+      lastMonthlyPayment: Number(loan.lastMonthlyPayment || loan.monthlyPayment || 0),
+      totalRepayment: Number(loan.totalRepayment || 0),
+      totalInterest: Number(loan.totalInterest || 0),
+      financeFee: Number(loan.financeFee || 0),
+      financeFees: Number.isFinite(Number(loan.financeFees)) ? Number(loan.financeFees) : Number(loan.financeFee || 0) + extraFees,
+      loanFeeDetails: feeDetails,
+      earlySettlement: loan.earlySettlement || null,
+      schedule: Array.isArray(loan.schedule) ? loan.schedule : []
+    });
+  } else {
+    record.loanInfo = null;
+  }
+  record.ownership = record.ownership && typeof record.ownership === 'object' ? record.ownership : null;
+  record.processText = String(record.processText || '历史导入记录未包含完整计算过程。');
+  record.riskAlerts = Array.isArray(record.riskAlerts) && record.riskAlerts.length ? record.riskAlerts : CarCalcEngine.buildRiskAlerts(record);
+  return record;
+}
+
+
+function renderRecords() { return renderRecordsV16(); }
+function showDetail(id) { return showDetailV16(id); }
+
 document.getElementById('modalOverlay').addEventListener('click', function(e) { if(e.target===this) closeModal(); });
 document.getElementById('processModal').addEventListener('click', function(e) { if(e.target===this) closeProcessModal(); });
 document.getElementById('saveModal').addEventListener('click', function(e) { if(e.target===this) closeSaveModal(); });
@@ -2044,15 +2884,35 @@ loadExternalPolicy().then(function(loaded) {
 }).finally(function() {
   updateBadge();
   recalcTotals();
+  onOwnershipChange();
+  loadSharedQuoteFromHash();
 });
 </script>
 
 <script>
+let pendingServiceWorker = null;
+function showAppUpdate(registration) {
+  pendingServiceWorker = registration;
+  document.getElementById('updateBanner').classList.add('show');
+}
+function applyAppUpdate() {
+  if (pendingServiceWorker && pendingServiceWorker.waiting) pendingServiceWorker.waiting.postMessage({ type: 'SKIP_WAITING' });
+}
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
     navigator.serviceWorker.register('./sw.js')
-      .then(function(reg) { console.log('SW registered:', reg.scope); })
+      .then(function(reg) {
+        if (reg.waiting) showAppUpdate(reg);
+        reg.addEventListener('updatefound', function() {
+          const worker = reg.installing;
+          if (!worker) return;
+          worker.addEventListener('statechange', function() {
+            if (worker.state === 'installed' && navigator.serviceWorker.controller) showAppUpdate(reg);
+          });
+        });
+      })
       .catch(function(err) { console.log('SW registration failed:', err); });
+    navigator.serviceWorker.addEventListener('controllerchange', function() { window.location.reload(); });
   });
 }
 </script>
