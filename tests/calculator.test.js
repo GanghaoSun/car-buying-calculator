@@ -84,6 +84,11 @@ function testLoanMethodsAndEarlySettlement() {
   assert.equal(early.earlySettlement.month, 12);
   assert.ok(early.earlySettlement.remainingPrincipal > 0);
   assert.ok(early.earlySettlement.interestSaved > 0);
+
+  const subsidized = engine.calculateLoan({ ...common, repaymentMethod: 'equal-payment', manufacturerInterestSubsidy: 5000 });
+  assert.equal(subsidized.appliedInterestSubsidy, 5000);
+  nearlyEqual(subsidized.customerTotalRepayment, subsidized.totalRepayment - 5000);
+  nearlyEqual(subsidized.netFinanceCost, subsidized.totalInterest + subsidized.financeFees - 5000);
 }
 
 function testLoanQuoteAndOwnership() {
@@ -125,6 +130,22 @@ function testLoanQuoteAndOwnership() {
   nearlyEqual(result.ownership.renewalInsurance, 10000);
   nearlyEqual(result.ownership.maintenanceCost, 4500);
   nearlyEqual(result.ownership.residualValue, 90000);
+  assert.equal(result.schemaVersion, '1.7.0');
+  assert.ok(Array.isArray(result.cashflowTimeline));
+  assert.equal(result.cashflowTimeline.filter(item => item.category === 'repayment').length, 36);
+  assert.equal(result.cashflowSummary.interestSubsidy, 0);
+}
+
+function testSchemaAndShareHelpers() {
+  const schema = require('../src/quote-schema.js');
+  const old = schema.migrateRecord({ id: 12, guidePrice: 200000, invoicePrice: 190000, payNow: 200000, finalCost: 210000 }, 0);
+  assert.equal(old.schemaVersion, '1.7.0');
+  assert.equal(old.recordVersion, 2);
+  assert.ok(Array.isArray(old.evidenceRefs));
+  const payload = schema.buildSharePayload({ id: 1, guidePrice: 200000, processText: 'private', evidenceRefs: [{ id: 'e1' }] });
+  assert.equal(payload.version, '1.7.0');
+  assert.equal(payload.result.processText, undefined);
+  assert.equal(payload.result.evidenceRefs, undefined);
 }
 
 function testValidationAndPolicyTemplate() {
@@ -148,6 +169,7 @@ function run() {
   testCostLayersAndSubsidyStates();
   testLoanMethodsAndEarlySettlement();
   testLoanQuoteAndOwnership();
+  testSchemaAndShareHelpers();
   testValidationAndPolicyTemplate();
   console.log('calculator engine tests passed');
 }
