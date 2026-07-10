@@ -276,7 +276,79 @@
         appliedInterestSubsidy: appliedBefore,
         customerSettlementRepayment: Math.max(0, settlementRepayment - appliedBefore),
         interestSaved: Math.max(0, totalRepayment - paidBefore - balance),
-        customerSa�N-�G����ƭy�nabled) return null;
+        customerSavings: Math.max(0, customerTotalRepayment - Math.max(0, settlementRepayment - appliedBefore))
+      };
+    }
+    const firstPayment = schedule.length ? schedule[0].payment : 0;
+    const lastPayment = schedule.length ? schedule[schedule.length - 1].payment : 0;
+    return {
+      downPaymentMode: downPaymentMode,
+      downPayment: downPayment,
+      downPaymentRatio: downPaymentRatio,
+      loanPrincipal: principal,
+      loanMonths: Math.floor(num(loan.loanMonths)),
+      annualRate: num(loan.annualRate),
+      repaymentMethod: repaymentMethod,
+      monthlyPayment: firstPayment,
+      firstMonthlyPayment: firstPayment,
+      lastMonthlyPayment: lastPayment,
+      totalRepayment: totalRepayment,
+      customerTotalRepayment: customerTotalRepayment,
+      totalInterest: totalInterest,
+      financeFee: Math.max(0, num(loan.financeFee)),
+      financeFees: financeFees,
+      manufacturerInterestSubsidy: manufacturerInterestSubsidy,
+      appliedInterestSubsidy: appliedInterestSubsidy,
+      netFinanceCost: Math.max(0, totalInterest + financeFees - appliedInterestSubsidy),
+      loanFeeDetails: normalizeDetails(loan.loanFeeDetails, { defaultName: '金融附加费', defaultStatus: 'confirmed', defaultTiming: 'delivery' }).filter(function (item) { return item.amt > 0; }),
+      earlySettlement: earlySettlement,
+      schedule: schedule
+    };
+  }
+
+  function buildCashflowTimeline(input) {
+    const options = input || {};
+    const loan = options.loanInfo;
+    if (!loan) {
+      return [{ month: 0, label: '提车日全款', category: 'delivery', amount: num(options.payNow), principal: num(options.payNow), interest: 0, remaining: 0 }];
+    }
+    const timeline = [{
+      month: 0,
+      label: '提车日首期垫付',
+      category: 'delivery',
+      amount: num(options.payNow),
+      principal: num(loan.downPayment),
+      interest: 0,
+      remaining: num(loan.loanPrincipal)
+    }];
+    if (loan.appliedInterestSubsidy > 0) {
+      timeline.push({
+        month: 0,
+        label: '厂家贴息抵扣',
+        category: 'subsidy',
+        amount: -num(loan.appliedInterestSubsidy),
+        principal: 0,
+        interest: -num(loan.appliedInterestSubsidy),
+        remaining: num(loan.loanPrincipal)
+      });
+    }
+    (loan.schedule || []).forEach(function (item) {
+      timeline.push({
+        month: item.month,
+        label: '第 ' + item.month + ' 期月供',
+        category: 'repayment',
+        amount: item.payment,
+        principal: item.principal,
+        interest: item.interest,
+        remaining: item.remaining
+      });
+    });
+    return timeline;
+  }
+
+  function calculateOwnership(input) {
+    const ownership = input.ownership || {};
+    if (!ownership.enabled) return null;
     const years = Math.floor(num(ownership.years, 3));
     const annualMileage = num(ownership.annualMileage);
     const energyCostPer100km = num(ownership.energyCostPer100km);
