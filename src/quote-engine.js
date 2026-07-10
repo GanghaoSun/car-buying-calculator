@@ -5,6 +5,7 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
+  const CURRENT_SCHEMA_VERSION = '1.7.0';
   const DEFAULT_SUBSIDY_STATUS = 'conditional';
   const REPAYMENT_METHODS = new Set(['equal-payment', 'equal-principal']);
 
@@ -67,6 +68,7 @@
         annualRate: num(loan.annualRate),
         repaymentMethod: REPAYMENT_METHODS.has(loan.repaymentMethod) ? loan.repaymentMethod : 'equal-payment',
         financeFee: num(loan.financeFee),
+        manufacturerInterestSubsidy: num(loan.manufacturerInterestSubsidy || loan.interestSubsidy),
         earlySettlementMonth: Math.floor(num(loan.earlySettlementMonth)),
         earlySettlementPenaltyRate: num(loan.earlySettlementPenaltyRate)
       },
@@ -106,6 +108,7 @@
       if (q.loan.loanMonths <= 0) errors.push('请选择有效的贷款期数。');
       if (q.loan.annualRate < 0 || q.loan.annualRate > 30) errors.push('年化利率应在 0% 到 30% 之间。');
       if (q.loan.financeFee < 0) errors.push('金融服务费不能为负数。');
+      if (q.loan.manufacturerInterestSubsidy < 0) errors.push('厂家贴息金额不能为负数。');
       if (q.loan.earlySettlementMonth < 0) errors.push('提前结清期数不能为负数。');
       if (q.loan.earlySettlementPenaltyRate < 0 || q.loan.earlySettlementPenaltyRate > 100) errors.push('提前结清违约金比例应在 0% 到 100% 之间。');
       if (q.loan.downPaymentMode === 'ratio' && (q.loan.downPaymentRatio < 0 || q.loan.downPaymentRatio >= 100)) errors.push('贷款购车的首付比例应在 0% 到 99% 之间。');
@@ -249,14 +252,20 @@
     const schedule = calculatePaymentSchedule(principal, loan.annualRate, loan.loanMonths, repaymentMethod);
     const totalRepayment = schedule.reduce(function (total, item) { return total + item.payment; }, 0);
     const totalInterest = schedule.reduce(function (total, item) { return total + item.interest; }, 0);
+    const manufacturerInterestSubsidy = Math.max(0, num(loan.manufacturerInterestSubsidy));
+    const appliedInterestSubsidy = Math.min(manufacturerInterestSubsidy, totalInterest);
+    const customerTotalRepayment = Math.max(0, totalRepayment - appliedInterestSubsidy);
+    const financeFees = Math.max(0, num(loan.financeFee)) + sum(loan.loanFeeDetails);
     const earlyMonth = Math.floor(num(loan.earlySettlementMonth));
     const penaltyRate = Math.max(0, num(loan.earlySettlementPenaltyRate));
     let earlySettlement = null;
     if (earlyMonth > 0 && earlyMonth < schedule.length) {
       const paidBefore = schedule.slice(0, earlyMonth).reduce(function (total, item) { return total + item.payment; }, 0);
+      const paidBeforeInterest = schedule.slice(0, earlyMonth).reduce(function (total, item) { return total + item.interest; }, 0);
       const balance = schedule[earlyMonth - 1].remaining;
       const penalty = balance * penaltyRate / 100;
       const settlementRepayment = paidBefore + balance + penalty;
+      const appliedBefore = Math.min(appliedInterestSubsidy, paidBeforeInterest);
       earlySettlement = {
         month: earlyMonth,
         paidBefore: paidBefore,
@@ -264,36 +273,10 @@
         penaltyRate: penaltyRate,
         penalty: penalty,
         settlementRepayment: settlementRepayment,
-        interestSaved: Math.max(0, totalRepayment - paidBefore - balance)
-      };
-    }
-    const financeFees = Math.max(0, num(loan.financeFee)) + sum(loan.loanFeeDetails);
-    const firstPayment = schedule.length ? schedule[0].payment : 0;
-    const lastPayment = schedule.length ? schedule[schedule.length - 1].payment : 0;
-    return {
-      downPaymentMode: downPaymentMode,
-      downPayment: downPayment,
-      downPaymentRatio: downPaymentRatio,
-      loanPrincipal: principal,
-      loanMonths: Math.floor(num(loan.loanMonths)),
-      annualRate: num(loan.annualRate),
-      repaymentMethod: repaymentMethod,
-      monthlyPayment: firstPayment,
-      firstMonthlyPayment: firstPayment,
-      lastMonthlyPayment: lastPayment,
-      totalRepayment: totalRepayment,
-      totalInterest: totalInterest,
-      financeFee: Math.max(0, num(loan.financeFee)),
-      financeFees: financeFees,
-      loanFeeDetails: normalizeDetails(loan.loanFeeDetails, { defaultName: '金融附加费', defaultStatus: 'confirmed', defaultTiming: 'delivery' }).filter(function (item) { return item.amt > 0; }),
-      earlySettlement: earlySettlement,
-      schedule: schedule
-    };
-  }
-
-  function calculateOwnership(input) {
-    const ownership = input.ownership || {};
-    if (!ownership.enabled) return null;
+        appliedInterestSubsidy: appliedBefore,
+        customerSettlementRepayment: Math.max(0, settlementRepayment - appliedBefore),
+        interestSaved: Math.max(0, totalRepayment - paidBefore - balance),
+        customerSa�N-�G����ƭy�nabled) return null;
     const years = Math.floor(num(ownership.years, 3));
     const annualMileage = num(ownership.annualMileage);
     const energyCostPer100km = num(ownership.energyCostPer100km);
@@ -338,13 +321,14 @@
       payNow: cashGross,
       totalInterest: 0,
       financeFees: 0,
+      interestSubsidy: 0,
       expectedCost: cashGross - confirmedSubsidy - conditionalSubsidy
     };
     const common = options.loan || {};
     const methods = ['equal-payment', 'equal-principal'];
     const scenarios = methods.map(function (repaymentMethod) {
       const loan = calculateLoan(Object.assign({}, common, { repaymentMethod: repaymentMethod }));
-      const gross = loan.downPayment + loan.totalRepayment + tax + extraExpense + loan.financeFees;
+      const gross = loan.downPayment + loan.customerTotalRepayment + tax + extraExpense + loan.financeFees;
       return {
         id: repaymentMethod,
         label: repaymentMethod === 'equal-principal' ? '等额本金' : '等额本息',
@@ -352,6 +336,8 @@
         payNow: loan.downPayment + tax + extraExpense + loan.financeFees,
         totalInterest: loan.totalInterest,
         financeFees: loan.financeFees,
+        interestSubsidy: loan.appliedInterestSubsidy,
+        netFinanceCost: loan.netFinanceCost,
         expectedCost: gross - confirmedSubsidy - conditionalSubsidy,
         firstMonthlyPayment: loan.firstMonthlyPayment,
         lastMonthlyPayment: loan.lastMonthlyPayment
@@ -379,6 +365,9 @@
     }
     if (loanInfo && loanInfo.financeFees > 0) {
       alerts.push({ type: 'info', title: '金融费用需写入合同', msg: '金融服务费及附加费用已纳入总成本。请确认是否开票、能否取消，以及是否与利率重复收费。' });
+    }
+    if (loanInfo && loanInfo.manufacturerInterestSubsidy > 0) {
+      alerts.push({ type: 'info', title: '厂家贴息需要核对合同', msg: '厂家贴息已按不超过实际利息的金额抵扣预算，但贴息承担方、适用期数、提前结清是否失效，必须以金融合同为准。' });
     }
     if (result.mfrSubsidy > 0 && result.guidePrice > 0 && result.mfrSubsidy / result.guidePrice > 0.15) {
       alerts.push({ type: 'info', title: '确认优惠是否直接减开发票', msg: '厂商优惠占指导价比例较高。请确认它是直接减少开票价，还是附条件的后返优惠。' });
@@ -435,7 +424,7 @@
     const loanInput = Object.assign({}, q.loan, { invoicePrice: invoicePrice, loanFeeDetails: q.loanFeeDetails });
     const loanInfo = q.paymentMethod === 'loan' ? calculateLoan(loanInput) : null;
     const grossCost = loanInfo
-      ? loanInfo.downPayment + loanInfo.totalRepayment + taxResult.tax + extraExpense + loanInfo.financeFees
+      ? loanInfo.downPayment + loanInfo.customerTotalRepayment + taxResult.tax + extraExpense + loanInfo.financeFees
       : invoicePrice + taxResult.tax + extraExpense;
     const payNow = loanInfo
       ? loanInfo.downPayment + taxResult.tax + extraExpense + loanInfo.financeFees
@@ -447,10 +436,10 @@
     const confirmedFinalCost = grossCost - confirmedSubsidy;
     const expectedFinalCost = confirmedFinalCost - conditionalSubsidy;
     const earlyGrossCost = loanInfo && loanInfo.earlySettlement
-      ? loanInfo.downPayment + loanInfo.earlySettlement.settlementRepayment + taxResult.tax + extraExpense + loanInfo.financeFees
+      ? loanInfo.downPayment + loanInfo.earlySettlement.customerSettlementRepayment + taxResult.tax + extraExpense + loanInfo.financeFees
       : null;
     const result = {
-      schemaVersion: '1.6.0',
+      schemaVersion: CURRENT_SCHEMA_VERSION,
       guidePrice: q.guidePrice,
       vatRate: q.vatRate,
       mfrSubsidy: mfrSubsidy,
@@ -501,6 +490,26 @@
       policyStatus: policyStatus(policy),
       calcTime: new Date().toISOString()
     };
+    if (loanInfo) {
+      result.manufacturerInterestSubsidy = loanInfo.manufacturerInterestSubsidy;
+      result.appliedInterestSubsidy = loanInfo.appliedInterestSubsidy;
+      result.cashflowTimeline = buildCashflowTimeline({ loanInfo: loanInfo, payNow: payNow });
+      result.cashflowSummary = {
+        delivery: payNow,
+        regularRepayment: loanInfo.customerTotalRepayment,
+        interestSubsidy: loanInfo.appliedInterestSubsidy,
+        regularTotal: payNow + loanInfo.customerTotalRepayment,
+        earlySettlementTotal: loanInfo.earlySettlement
+          ? payNow + loanInfo.earlySettlement.customerSettlementRepayment
+          : null
+      };
+      result.totalSavings += loanInfo.appliedInterestSubsidy;
+    } else {
+      result.manufacturerInterestSubsidy = 0;
+      result.appliedInterestSubsidy = 0;
+      result.cashflowTimeline = buildCashflowTimeline({ payNow: payNow });
+      result.cashflowSummary = { delivery: payNow, regularRepayment: 0, interestSubsidy: 0, regularTotal: payNow, earlySettlementTotal: null };
+    }
     if (q.ownership.enabled) {
       result.ownership = calculateOwnership({ ownership: q.ownership, baseCost: expectedFinalCost, invoicePrice: invoicePrice });
     } else {
@@ -533,6 +542,7 @@
     calculateTradeInSubsidy: calculateTradeInSubsidy,
     calculatePaymentSchedule: calculatePaymentSchedule,
     calculateLoan: calculateLoan,
+    buildCashflowTimeline: buildCashflowTimeline,
     calculateOwnership: calculateOwnership,
     calculateQuote: calculateQuote,
     buildRiskAlerts: buildRiskAlerts,
