@@ -1,11 +1,26 @@
 {
   "name": "car-buying-calculator",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "private": true,
   "description": "购车落地价计算器：拆解购置税、补贴、优惠、赠品和多店报价。",
   "scripts": {
-    "test": "node tests/calculator.test.js",
-    "check": "node tests/calculator.test.js"
+    "test": "npm run test:unit",
+    "test:unit": "node tests/calculator.test.js",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "screenshots": "node tests/capture-screenshots.js",
+    "check": "npm run test:unit && npm run test:e2e",
+    "vendor:build:qrcode": "esbuild node_modules/qrcode/lib/browser.js --bundle --minify --format=iife --global-name=QRCode --outfile=vendor/qrcode.min.js"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@playwright/test": "1.60.0",
+    "@tesseract.js-data/chi_sim": "1.0.0",
+    "@tesseract.js-data/eng": "1.0.0",
+    "esbuild": "0.25.8",
+    "html2canvas": "1.4.1",
+    "jszip": "3.10.1",
+    "qrcode": "1.5.4",
+    "tesseract.js": "5.1.1",
+    "tesseract.js-core": "5.1.1"
+  }
 }

@@ -1,6 +1,6 @@
 // 购车比价计算器 - Service Worker
 // 版本号：每次更新文件时修改此处
-const CACHE_NAME = 'car-calc-v8';
+const CACHE_NAME = 'car-calc-v9';
 
 // 需要缓存的文件列表
 const FILES_TO_CACHE = [
@@ -11,6 +11,17 @@ const FILES_TO_CACHE = [
   './src/local-evidence.js',
   './src/qr-adapter.js',
   './src/ocr-adapter.js',
+  './vendor/qrcode.min.js',
+  './vendor/jszip.min.js',
+  './vendor/html2canvas.min.js',
+  './vendor/tesseract/tesseract.min.js',
+  './vendor/tesseract/worker.min.js',
+  './vendor/tesseract-core/tesseract-core.wasm.js',
+  './vendor/tesseract-core/tesseract-core-simd.wasm.js',
+  './vendor/tesseract-core/tesseract-core-lstm.wasm.js',
+  './vendor/tesseract-core/tesseract-core-simd-lstm.wasm.js',
+  './vendor/tesseract-lang/chi_sim.traineddata.gz',
+  './vendor/tesseract-lang/eng.traineddata.gz',
   './data/policy.json',
   './manifest.json',
   './icon-192.png',

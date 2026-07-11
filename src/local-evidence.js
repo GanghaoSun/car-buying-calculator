@@ -100,6 +100,40 @@
     });
   }
 
+  function all() {
+    return openDb().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        const request = db.transaction(STORE_NAME, 'readonly').objectStore(STORE_NAME).getAll();
+        request.onsuccess = function () { db.close(); resolve(request.result || []); };
+        request.onerror = function () { db.close(); reject(request.error); };
+      });
+    });
+  }
+
+  function put(item) {
+    if (!item || !item.id || !item.blob) return Promise.reject(new Error('备份证据数据不完整。'));
+    const restored = {
+      id: String(item.id),
+      quoteId: String(item.quoteId || ''),
+      name: String(item.name || '本地证据'),
+      type: String(item.type || item.blob.type || 'application/octet-stream'),
+      size: Number(item.size || item.blob.size || 0),
+      kind: String(item.kind || 'quote'),
+      note: String(item.note || ''),
+      addedAt: String(item.addedAt || new Date().toISOString()),
+      hash: String(item.hash || ''),
+      blob: item.blob
+    };
+    return openDb().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        tx.objectStore(STORE_NAME).put(restored);
+        tx.oncomplete = function () { db.close(); resolve(summarize(restored)); };
+        tx.onerror = function () { db.close(); reject(tx.error || new Error('证据恢复失败。')); };
+      });
+    });
+  }
+
   function remove(id) {
     return openDb().then(function (db) {
       return new Promise(function (resolve, reject) {
@@ -117,6 +151,17 @@
     });
   }
 
+  function clear() {
+    return openDb().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        tx.objectStore(STORE_NAME).clear();
+        tx.oncomplete = function () { db.close(); resolve(true); };
+        tx.onerror = function () { db.close(); reject(tx.error || new Error('本地证据清理失败。')); };
+      });
+    });
+  }
+
   function toObjectUrl(item) {
     if (!item || !item.blob || typeof URL === 'undefined' || !URL.createObjectURL) return '';
     return URL.createObjectURL(item.blob);
@@ -127,8 +172,11 @@
     add: add,
     list: list,
     get: get,
+    all: all,
+    put: put,
     remove: remove,
     removeQuote: removeQuote,
+    clear: clear,
     toObjectUrl: toObjectUrl
   };
 });

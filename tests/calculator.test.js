@@ -2,6 +2,9 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const engine = require('../src/quote-engine.js');
+const shareCodec = require('../src/share-codec.js');
+const ocrAdapter = require('../src/ocr-adapter.js');
+const evidenceStore = require('../src/local-evidence.js');
 
 const policy = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'policy.json'), 'utf8'));
 
@@ -78,6 +81,12 @@ function testLoanMethodsAndEarlySettlement() {
   assert.ok(equalPrincipal.firstMonthlyPayment > equalPrincipal.lastMonthlyPayment);
   assert.ok(equalPrincipal.totalInterest < equalPayment.totalInterest);
   nearlyEqual(equalPayment.financeFees, 3000);
+  assert.ok(equalPayment.effectiveAnnualRate > equalPayment.annualRate);
+
+  const opportunityCost = engine.calculateLoan({ ...common, repaymentMethod: 'equal-payment', foregoneCashDiscount: 8000 });
+  nearlyEqual(opportunityCost.netFinanceCost, opportunityCost.totalInterest + opportunityCost.financeFees + 8000);
+  assert.equal(opportunityCost.foregoneCashDiscount, 8000);
+  assert.ok(opportunityCost.effectiveAnnualRate > equalPayment.effectiveAnnualRate);
 
   const early = engine.calculateLoan({ ...common, repaymentMethod: 'equal-payment', earlySettlementMonth: 12, earlySettlementPenaltyRate: 1 });
   assert.ok(early.earlySettlement);
@@ -130,7 +139,7 @@ function testLoanQuoteAndOwnership() {
   nearlyEqual(result.ownership.renewalInsurance, 10000);
   nearlyEqual(result.ownership.maintenanceCost, 4500);
   nearlyEqual(result.ownership.residualValue, 90000);
-  assert.equal(result.schemaVersion, '1.7.0');
+  assert.equal(result.schemaVersion, '1.8.0');
   assert.ok(Array.isArray(result.cashflowTimeline));
   assert.equal(result.cashflowTimeline.filter(item => item.category === 'repayment').length, 36);
   assert.equal(result.cashflowSummary.interestSubsidy, 0);
@@ -139,13 +148,45 @@ function testLoanQuoteAndOwnership() {
 function testSchemaAndShareHelpers() {
   const schema = require('../src/quote-schema.js');
   const old = schema.migrateRecord({ id: 12, guidePrice: 200000, invoicePrice: 190000, payNow: 200000, finalCost: 210000 }, 0);
-  assert.equal(old.schemaVersion, '1.7.0');
-  assert.equal(old.recordVersion, 2);
+  assert.equal(old.schemaVersion, '1.8.0');
+  assert.equal(old.recordVersion, 3);
   assert.ok(Array.isArray(old.evidenceRefs));
   const payload = schema.buildSharePayload({ id: 1, guidePrice: 200000, processText: 'private', evidenceRefs: [{ id: 'e1' }] });
-  assert.equal(payload.version, '1.7.0');
+  assert.equal(payload.version, '1.8.0');
   assert.equal(payload.result.processText, undefined);
   assert.equal(payload.result.evidenceRefs, undefined);
+}
+
+function testCompletenessAndComparability() {
+  const complete = engine.assessQuoteCompleteness({
+    guidePrice: 220000,
+    carType: 'nev',
+    nevType: 'bev',
+    paymentMethod: 'full',
+    quoteModelSpec: '2026款 Max版 · 19英寸轮毂',
+    insuranceDetails: [{ name: '交强险', amt: 950 }, { name: '三者险', amt: 1200 }],
+    insuranceCoverageNote: '人保 · 三者300万 · 含车损',
+    feeDisclosureConfirmed: true,
+    subsidyTermsConfirmed: true,
+    contractTermsNote: '订金可退条件、交付日期和赠品已写明'
+  });
+  assert.equal(complete.score, 100);
+  assert.equal(complete.level, '完整');
+  assert.deepEqual(complete.missing, []);
+
+  const incomplete = engine.assessQuoteCompleteness({ guidePrice: 220000, carType: 'fuel', displacement: 'le2', paymentMethod: 'full' });
+  assert.ok(incomplete.score < 60);
+  assert.ok(incomplete.missing.includes('保险公司、险种与保额'));
+
+  const base = {
+    quoteModelSpec: '2026款 Max版', insuranceCoverageNote: '人保 · 三者300万',
+    paymentMethod: 'loan', carType: 'nev', nevType: 'bev',
+    loanPlanName: '厂家金融A', loanInfo: { loanMonths: 36, repaymentMethod: 'equal-payment', annualRate: 3.8 }
+  };
+  assert.equal(engine.assessComparability([base, { ...base }]).level, 'comparable');
+  const mismatch = engine.assessComparability([base, { ...base, insuranceCoverageNote: '平安 · 三者200万' }]);
+  assert.equal(mismatch.level, 'partial');
+  assert.ok(mismatch.issues.some((item) => item.includes('保险')));
 }
 
 function testValidationAndPolicyTemplate() {
@@ -164,14 +205,41 @@ function testValidationAndPolicyTemplate() {
   assert.equal(engine.validatePolicyProfile(policy).valid, true);
 }
 
-function run() {
+async function testShareCodecAndBrowserAdapters() {
+  const payload = {
+    app: 'car-buying-calculator',
+    version: '1.8.0',
+    result: { guidePrice: 240000, paymentMethod: 'loan', note: '中文分享校验' }
+  };
+  const encoded = await shareCodec.encode(payload);
+  assert.ok(encoded.startsWith('gz.') || encoded.startsWith('raw.'));
+  assert.deepEqual(await shareCodec.decode(encoded), payload);
+
+  const fields = ocrAdapter.parseFields('厂家指导价 240000\n成交价 225000\n保险费用 5800\n贷款 36 期\n年化利率 3.8%');
+  const values = Object.fromEntries(fields.map((item) => [item.key, item.value]));
+  assert.equal(values.guidePrice, 240000);
+  assert.equal(values.invoicePrice, 225000);
+  assert.equal(values.insurance, 5800);
+  assert.equal(values.loanMonths, 36);
+  assert.equal(values.annualRate, 3.8);
+
+  assert.equal(evidenceStore.supported(), false);
+  assert.equal(ocrAdapter.scriptUrl, './vendor/tesseract/tesseract.min.js');
+}
+
+async function run() {
   testPolicyAndTax();
   testCostLayersAndSubsidyStates();
   testLoanMethodsAndEarlySettlement();
   testLoanQuoteAndOwnership();
   testSchemaAndShareHelpers();
+  testCompletenessAndComparability();
   testValidationAndPolicyTemplate();
+  await testShareCodecAndBrowserAdapters();
   console.log('calculator engine tests passed');
 }
 
-run();
+run().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

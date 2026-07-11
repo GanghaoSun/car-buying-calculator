@@ -5,7 +5,7 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
-  const SCRIPT_URL = 'https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js';
+  const SCRIPT_URL = './vendor/qrcode.min.js';
   let loading = null;
 
   function load() {
@@ -19,7 +19,7 @@
         const api = rootQRCode();
         if (api) resolve(api); else reject(new Error('二维码运行库加载后不可用。'));
       };
-      script.onerror = function () { reject(new Error('二维码运行库加载失败，请检查网络后重试。')); };
+      script.onerror = function () { reject(new Error('本地二维码运行库加载失败，请刷新页面后重试。')); };
       document.head.appendChild(script);
     });
     return loading;

@@ -8,6 +8,7 @@ Thumbs.db
 
 # Temporary automation artifacts
 .playwright-cli/
+output/playwright/
 .tmp-*.js
 .tmp-*.cjs
 
@@ -15,4 +16,3 @@ Thumbs.db
 node_modules/
 dist/
 build/
-

@@ -1,4 +1,4 @@
-name: 计算逻辑核验
+name: 自动化质量核验
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  test:
+  unit-test:
     runs-on: ubuntu-latest
     steps:
       - name: 检出代码
@@ -19,5 +19,33 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: 运行计算逻辑测试
+          cache: npm
+      - name: 安装固定依赖
+        run: npm ci
+      - name: 运行计算核心测试
         run: npm test
+
+  browser-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+      - name: 配置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: 安装固定依赖
+        run: npm ci
+      - name: 安装 Chromium
+        run: npx playwright install --with-deps chromium
+      - name: 运行浏览器端到端测试
+        run: npm run test:e2e
+      - name: 保存失败诊断
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-diagnostics
+          path: output/playwright/
+          if-no-files-found: ignore

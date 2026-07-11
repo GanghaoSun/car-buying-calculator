@@ -5,8 +5,8 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
-  const CURRENT_SCHEMA_VERSION = '1.7.0';
-  const CURRENT_RECORD_VERSION = 2;
+  const CURRENT_SCHEMA_VERSION = '1.8.0';
+  const CURRENT_RECORD_VERSION = 3;
 
   function clone(value) {
     return JSON.parse(JSON.stringify(value));
@@ -23,11 +23,14 @@
       if (!item || typeof item !== 'object') return null;
       return {
         id: String(item.id || ''),
+        quoteId: String(item.quoteId || ''),
         name: String(item.name || '本地证据'),
         kind: String(item.kind || 'quote'),
         type: String(item.type || 'application/octet-stream'),
         size: Number(item.size || 0),
-        addedAt: String(item.addedAt || '')
+        addedAt: String(item.addedAt || ''),
+        note: String(item.note || ''),
+        hash: String(item.hash || '')
       };
     }).filter(Boolean);
   }

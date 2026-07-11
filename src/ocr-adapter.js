@@ -5,8 +5,10 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
-  const SCRIPT_URL = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';
-  const LANG_URL = 'https://tessdata.projectnaptha.com/4.0.0';
+  const SCRIPT_URL = './vendor/tesseract/tesseract.min.js';
+  const WORKER_URL = './vendor/tesseract/worker.min.js';
+  const CORE_URL = './vendor/tesseract-core';
+  const LANG_URL = './vendor/tesseract-lang';
   let loading = null;
 
   function loadRuntime() {
@@ -53,7 +55,12 @@
   async function recognize(file, onProgress) {
     if (!file) throw new Error('请选择一张报价单图片。');
     const runtime = await loadRuntime();
-    const worker = await runtime.createWorker('chi_sim+eng', 1, { langPath: LANG_URL, logger: function (info) { if (onProgress) onProgress(info); } });
+    const worker = await runtime.createWorker('chi_sim+eng', 1, {
+      workerPath: WORKER_URL,
+      corePath: CORE_URL,
+      langPath: LANG_URL,
+      logger: function (info) { if (onProgress) onProgress(info); }
+    });
     try {
       const result = await worker.recognize(file);
       const text = result && result.data ? result.data.text : '';
@@ -63,5 +70,5 @@
     }
   }
 
-  return { recognize: recognize, parseFields: parseFields, scriptUrl: SCRIPT_URL, langUrl: LANG_URL };
+  return { recognize: recognize, parseFields: parseFields, scriptUrl: SCRIPT_URL, workerUrl: WORKER_URL, coreUrl: CORE_URL, langUrl: LANG_URL };
 });
