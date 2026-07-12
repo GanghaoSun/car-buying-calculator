@@ -411,7 +411,7 @@ npm run screenshots
 ├── package-lock.json       # 可复现依赖锁文件
 ├── playwright.config.js    # Chromium/Firefox/WebKit E2E 矩阵
 ├── manifest.json           # PWA 元信息
-├── sw.js                   # Service Worker v9 完整离线资源缓存
+├── sw.js                   # Service Worker v10 完整离线资源缓存
 ├── icon-192.png            # PWA 图标
 ├── icon-512.png            # PWA 图标
 ├── data/
