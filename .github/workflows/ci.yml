@@ -38,9 +38,9 @@ jobs:
           cache: npm
       - name: 安装固定依赖
         run: npm ci
-      - name: 安装 Chromium
-        run: npx playwright install --with-deps chromium
-      - name: 运行浏览器端到端测试
+      - name: 安装 Chromium / Firefox / WebKit
+        run: npx playwright install --with-deps chromium firefox webkit
+      - name: 运行浏览器端到端测试矩阵
         run: npm run test:e2e
       - name: 保存失败诊断
         if: failure()

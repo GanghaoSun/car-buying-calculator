@@ -1,6 +1,6 @@
 // 购车比价计算器 - Service Worker
 // 版本号：每次更新文件时修改此处
-const CACHE_NAME = 'car-calc-v9';
+const CACHE_NAME = 'car-calc-v10';
 
 // 需要缓存的文件列表
 const FILES_TO_CACHE = [
@@ -11,6 +11,7 @@ const FILES_TO_CACHE = [
   './src/local-evidence.js',
   './src/qr-adapter.js',
   './src/ocr-adapter.js',
+  './src/pdf-report.js',
   './vendor/qrcode.min.js',
   './vendor/jszip.min.js',
   './vendor/html2canvas.min.js',

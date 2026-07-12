@@ -1045,6 +1045,7 @@ footer a:hover{color:var(--accent)}
     <button class="btn-sec" onclick="shareQuoteLink()">🔗 生成报价链接</button>
     <button class="btn-sec" onclick="shareQuoteQr()">▦ 生成二维码</button>
     <button class="btn-sec" onclick="exportReport()">📄 导出报价报告</button>
+    <button class="btn-sec" onclick="exportNativePdf()">PDF 导出</button>
     <button class="btn-sec" onclick="exportLongImage()">▤ 导出长图</button>
     <button class="btn-save" onclick="openSaveModal()">💾 保存报价记录</button>
   </div>
@@ -1106,6 +1107,7 @@ footer a:hover{color:var(--accent)}
 <script src="./src/local-evidence.js"></script>
 <script src="./src/qr-adapter.js"></script>
 <script src="./src/ocr-adapter.js"></script>
+<script src="./src/pdf-report.js"></script>
 <script>
 /* ==========================================================
    STATE
@@ -3402,7 +3404,23 @@ function exportReport() {
   if (!lastCalcResult) { showModal('提示', '<p>请先完成计算。</p>'); return; }
   const date = new Date().toISOString().slice(0, 10);
   downloadTextFile(`购车报价报告_${date}.html`, buildReportHTML(lastCalcResult), 'text/html;charset=utf-8');
-  showModal('✅ 报告已生成', '<p>已导出 HTML 报价报告。打开文件后可通过浏览器打印功能另存为 PDF，用于线下沟通和留档。</p>');
+  showModal('✅ 报告已生成', '<p>已导出 HTML 报价报告。也可以直接点击“PDF 导出”生成本地可检索 PDF 文件，用于线下沟通和留档。</p>');
+}
+
+function exportNativePdf() {
+  if (!lastCalcResult) { showModal('提示', '<p>请先完成计算。</p>'); return; }
+  if (typeof CarCalcPdf === 'undefined') {
+    showModal('PDF 导出不可用', '<p>本地 PDF 生成器未正确加载，请刷新页面后重试。</p>');
+    return;
+  }
+  try {
+    const blob = CarCalcPdf.buildReportPdfBlob(lastCalcResult);
+    if (!blob || blob.size < 1000) throw new Error('PDF 内容为空或生成不完整。');
+    downloadBlob('购车报价报告_' + new Date().toISOString().slice(0, 10) + '.pdf', blob);
+    showModal('PDF 已生成', '<p>已在浏览器本地生成原生 PDF，包含核心费用表、风险提示、计算过程摘要和免责声明。PDF 内写入中文 ToUnicode 映射，支持常见阅读器中的文本检索和复制。</p>');
+  } catch (err) {
+    showModal('PDF 生成失败', '<p>' + escapeHTML(err.message || '当前浏览器无法生成 PDF。') + '</p>');
+  }
 }
 
 async function exportLongImage() {

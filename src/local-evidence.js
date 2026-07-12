@@ -29,9 +29,31 @@
     });
   }
 
+  function digestBuffer(buffer) {
+    if (!buffer || !globalThis.crypto || !crypto.subtle) return Promise.resolve('');
+    return crypto.subtle.digest('SHA-256', buffer)
+      .then(function (hash) {
+        return Array.from(new Uint8Array(hash)).map(function (item) { return item.toString(16).padStart(2, '0'); }).join('');
+      }).catch(function () { return ''; });
+  }
+
+  function readFileBuffer(file) {
+    if (!file || !file.arrayBuffer) return Promise.reject(new Error('当前浏览器无法读取该证据文件。'));
+    return file.arrayBuffer();
+  }
+
+  function hydrate(item) {
+    if (!item) return null;
+    const copy = Object.assign({}, item);
+    if (!copy.blob && copy.data && typeof Blob !== 'undefined') {
+      copy.blob = new Blob([copy.data], { type: copy.type || 'application/octet-stream' });
+    }
+    return copy;
+  }
+
   function digest(file) {
     if (!file || !file.arrayBuffer || !globalThis.crypto || !crypto.subtle) return Promise.resolve('');
-    return file.arrayBuffer().then(function (buffer) {
+    return readFileBuffer(file).then(function (buffer) {
       return crypto.subtle.digest('SHA-256', buffer);
     }).then(function (hash) {
       return Array.from(new Uint8Array(hash)).map(function (item) { return item.toString(16).padStart(2, '0'); }).join('');
@@ -41,26 +63,28 @@
   function add(quoteId, file, options) {
     const settings = options || {};
     if (!file) return Promise.reject(new Error('没有可保存的文件。'));
-    return Promise.all([openDb(), digest(file)]).then(function (values) {
+    return Promise.all([openDb(), readFileBuffer(file)]).then(function (values) {
       const db = values[0];
-      const hash = values[1];
-      const item = {
-        id: (typeof CarCalcSchema !== 'undefined' && CarCalcSchema.makeId ? CarCalcSchema.makeId('evidence') : 'evidence-' + Date.now() + '-' + Math.random().toString(36).slice(2)),
-        quoteId: String(quoteId || ''),
-        name: String(file.name || '本地证据'),
-        type: String(file.type || 'application/octet-stream'),
-        size: Number(file.size || 0),
-        kind: String(settings.kind || 'quote'),
-        note: String(settings.note || ''),
-        addedAt: new Date().toISOString(),
-        hash: hash,
-        blob: file
-      };
-      return new Promise(function (resolve, reject) {
-        const tx = db.transaction(STORE_NAME, 'readwrite');
-        tx.objectStore(STORE_NAME).put(item);
-        tx.oncomplete = function () { db.close(); resolve(summarize(item)); };
-        tx.onerror = function () { db.close(); reject(tx.error || new Error('证据保存失败。')); };
+      const buffer = values[1];
+      return digestBuffer(buffer).then(function (hash) {
+        const item = {
+          id: (typeof CarCalcSchema !== 'undefined' && CarCalcSchema.makeId ? CarCalcSchema.makeId('evidence') : 'evidence-' + Date.now() + '-' + Math.random().toString(36).slice(2)),
+          quoteId: String(quoteId || ''),
+          name: String(file.name || '本地证据'),
+          type: String(file.type || 'application/octet-stream'),
+          size: Number(file.size || buffer.byteLength || 0),
+          kind: String(settings.kind || 'quote'),
+          note: String(settings.note || ''),
+          addedAt: new Date().toISOString(),
+          hash: hash,
+          data: buffer
+        };
+        return new Promise(function (resolve, reject) {
+          const tx = db.transaction(STORE_NAME, 'readwrite');
+          tx.objectStore(STORE_NAME).put(item);
+          tx.oncomplete = function () { db.close(); resolve(summarize(item)); };
+          tx.onerror = function () { db.close(); reject(tx.error || new Error('证据保存失败。')); };
+        });
       });
     });
   }
@@ -94,7 +118,7 @@
     return openDb().then(function (db) {
       return new Promise(function (resolve, reject) {
         const request = db.transaction(STORE_NAME, 'readonly').objectStore(STORE_NAME).get(id);
-        request.onsuccess = function () { db.close(); resolve(request.result || null); };
+        request.onsuccess = function () { db.close(); resolve(hydrate(request.result)); };
         request.onerror = function () { db.close(); reject(request.error); };
       });
     });
@@ -104,27 +128,30 @@
     return openDb().then(function (db) {
       return new Promise(function (resolve, reject) {
         const request = db.transaction(STORE_NAME, 'readonly').objectStore(STORE_NAME).getAll();
-        request.onsuccess = function () { db.close(); resolve(request.result || []); };
+        request.onsuccess = function () { db.close(); resolve((request.result || []).map(hydrate)); };
         request.onerror = function () { db.close(); reject(request.error); };
       });
     });
   }
 
   function put(item) {
-    if (!item || !item.id || !item.blob) return Promise.reject(new Error('备份证据数据不完整。'));
-    const restored = {
-      id: String(item.id),
-      quoteId: String(item.quoteId || ''),
-      name: String(item.name || '本地证据'),
-      type: String(item.type || item.blob.type || 'application/octet-stream'),
-      size: Number(item.size || item.blob.size || 0),
-      kind: String(item.kind || 'quote'),
-      note: String(item.note || ''),
-      addedAt: String(item.addedAt || new Date().toISOString()),
-      hash: String(item.hash || ''),
-      blob: item.blob
-    };
-    return openDb().then(function (db) {
+    if (!item || !item.id || (!item.blob && !item.data)) return Promise.reject(new Error('备份证据数据不完整。'));
+    const dataPromise = item.data ? Promise.resolve(item.data) : readFileBuffer(item.blob);
+    return Promise.all([openDb(), dataPromise]).then(function (values) {
+      const db = values[0];
+      const data = values[1];
+      const restored = {
+        id: String(item.id),
+        quoteId: String(item.quoteId || ''),
+        name: String(item.name || '本地证据'),
+        type: String(item.type || (item.blob && item.blob.type) || 'application/octet-stream'),
+        size: Number(item.size || (item.blob && item.blob.size) || data.byteLength || 0),
+        kind: String(item.kind || 'quote'),
+        note: String(item.note || ''),
+        addedAt: String(item.addedAt || new Date().toISOString()),
+        hash: String(item.hash || ''),
+        data: data
+      };
       return new Promise(function (resolve, reject) {
         const tx = db.transaction(STORE_NAME, 'readwrite');
         tx.objectStore(STORE_NAME).put(restored);

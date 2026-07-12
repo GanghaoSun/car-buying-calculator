@@ -5,6 +5,7 @@ const engine = require('../src/quote-engine.js');
 const shareCodec = require('../src/share-codec.js');
 const ocrAdapter = require('../src/ocr-adapter.js');
 const evidenceStore = require('../src/local-evidence.js');
+const pdfReport = require('../src/pdf-report.js');
 
 const policy = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'policy.json'), 'utf8'));
 
@@ -205,6 +206,41 @@ function testValidationAndPolicyTemplate() {
   assert.equal(engine.validatePolicyProfile(policy).valid, true);
 }
 
+function testPdfReportGenerator() {
+  const result = calculate({
+    guidePrice: 220000,
+    vatRate: 13,
+    carType: 'nev',
+    nevType: 'bev',
+    tradeIn: 'none',
+    paymentMethod: 'loan',
+    quoteModelSpec: '2026款 Max版',
+    insuranceCoverageNote: '人保 · 三者300万',
+    loanPlanName: '厂家金融',
+    feeDisclosureConfirmed: true,
+    cashDiscountConfirmed: true,
+    contractTermsNote: '交付日期和赠品写入合同',
+    insuranceDetails: [{ name: '交强险', amt: 950 }, { name: '商业险', amt: 5200 }],
+    expDetails: [{ name: '上牌费', amt: 500 }],
+    loan: {
+      downPaymentMode: 'ratio',
+      downPaymentRatio: 30,
+      loanMonths: 36,
+      annualRate: 4,
+      repaymentMethod: 'equal-payment',
+      financeFee: 2000,
+      foregoneCashDiscount: 5000,
+      manufacturerInterestSubsidy: 2000
+    }
+  });
+  result.processText = '开票价 = 指导价 - 厂商优惠\nPDF 可检索中文文本校验';
+  const pdf = pdfReport.buildPdf(result);
+  assert.ok(pdf.startsWith('%PDF-'));
+  assert.ok(pdf.includes('/ToUnicode'));
+  assert.ok(pdf.includes('8D2D8F6662A54EF7'), 'PDF should include UTF-16BE searchable Chinese text mapping');
+  assert.ok(pdf.length > 4000);
+}
+
 async function testShareCodecAndBrowserAdapters() {
   const payload = {
     app: 'car-buying-calculator',
@@ -235,6 +271,7 @@ async function run() {
   testSchemaAndShareHelpers();
   testCompletenessAndComparability();
   testValidationAndPolicyTemplate();
+  testPdfReportGenerator();
   await testShareCodecAndBrowserAdapters();
   console.log('calculator engine tests passed');
 }

@@ -7,9 +7,12 @@
     "test": "npm run test:unit",
     "test:unit": "node tests/calculator.test.js",
     "test:e2e": "playwright test",
+    "test:e2e:chromium": "playwright test --project=chromium",
+    "test:e2e:matrix": "playwright test --project=chromium --project=firefox --project=webkit",
     "test:e2e:headed": "playwright test --headed",
     "screenshots": "node tests/capture-screenshots.js",
-    "check": "npm run test:unit && npm run test:e2e",
+    "policy:validate": "node scripts/validate-policy-packs.js",
+    "check": "npm run test:unit && npm run policy:validate && npm run test:e2e",
     "vendor:build:qrcode": "esbuild node_modules/qrcode/lib/browser.js --bundle --minify --format=iife --global-name=QRCode --outfile=vendor/qrcode.min.js"
   },
   "devDependencies": {

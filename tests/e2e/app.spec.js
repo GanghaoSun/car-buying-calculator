@@ -127,6 +127,16 @@ test('完整备份恢复证据，并可导出非空长图', async ({ page }) => 
   expect(imageStat.size).toBeGreaterThan(5000);
   await closeNotice(page);
 
+  const pdfDownloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: /PDF 导出/ }).click();
+  const pdfDownload = await pdfDownloadPromise;
+  const pdfPath = await pdfDownload.path();
+  const pdfBuffer = await fs.readFile(pdfPath);
+  expect(pdfBuffer.subarray(0, 5).toString()).toBe('%PDF-');
+  expect(pdfBuffer.toString('latin1')).toContain('/ToUnicode');
+  expect(pdfBuffer.length).toBeGreaterThan(4000);
+  await closeNotice(page);
+
   await saveCurrentQuote(page, '带证据4S店', '测试车型 Max版');
   await page.locator('#tab4').click();
   const backupDownloadPromise = page.waitForEvent('download');
@@ -155,7 +165,7 @@ test('完整备份恢复证据，并可导出非空长图', async ({ page }) => 
   await expect(page.locator('#detailModal')).toContainText('本地证据（1）');
 });
 
-test('PWA 可离线重载且页面不依赖外部静态资源', async ({ page, context }) => {
+test('Chromium-only PWA 可离线重载且页面不依赖外部静态资源', async ({ page, context }) => {
   test.setTimeout(120_000);
   const externalRequests = [];
   page.on('request', function (request) {
